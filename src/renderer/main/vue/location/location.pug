@@ -1,0 +1,10 @@
+.location(@click.prevent="clickLocation")
+    template(v-if="isHideWorldName")
+        template(v-if="locationInfo.instanceId !== void 0")
+            | {{ `#${locationInfo.name} ${locationInfo.displayAccessType}` }}
+    template(v-else)
+        | {{ world?.apiWorld.name ?? worldName ?? locationInfo.worldId ?? locationInfo.location }}
+        template(v-if="locationInfo.instanceId !== void 0")
+            | {{ `&nbsp;#${locationInfo.name} ${locationInfo.displayAccessType}` }}
+    template(v-if="locationInfo.region !== void 0")
+        .famfamfam-flags(:class="regionClass")

@@ -1,0 +1,21 @@
+.content
+    div {{ worldId }}
+    template(v-if="world")
+        div
+            img(:src="world.apiWorld.thumbnailImageUrl"
+                :alt="world.apiWorld.displayName ?? world.id"
+                style="width: 256px; height: 192px;")
+        div name={{ world.apiWorld.name }}
+        div description={{ world.apiWorld.description }}
+        div authorId=#[a(href="#" @click.prevent="goUserPage(world.apiWorld.authorId)") {{ world.apiWorld.authorId }}]
+        div authorName={{ world.apiWorld.authorName }}
+        div releaseStatus={{ world.apiWorld.releaseStatus }}
+    div
+        div(@click.prevent="removeFavorite") unfavorite
+        div(v-for="(favoriteGroup, index) in worldFavoriteGroupList" :key="index" @click.prevent="addFavorite(favoriteGroup)")
+            template(v-if="favoriteGroup === favorite?.favoriteGroup")
+                | {{ `[HERE] ${favoriteGroup.apiFavoriteGroup.displayName} (${favoriteGroup.favoriteMap.size}/${favoriteGroup.capacity})` }}
+            template(v-else)
+                | {{ `${favoriteGroup.apiFavoriteGroup.displayName} (${favoriteGroup.favoriteMap.size}/${favoriteGroup.capacity})` }}
+    div(style="max-height: 300px; overflow: auto;")
+        pre {{ JSON.stringify(world, null, 2) }}
