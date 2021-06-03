@@ -1,0 +1,15 @@
+productName: NoticeMeSenpai
+appId: moe.pypy.vrcx
+npmRebuild: false
+
+asar: true
+
+directories:
+    output: ./release/
+
+files:
+    - ./dist/
+
+win:
+    icon: ./assets/icons/app.ico
+    target: zip
