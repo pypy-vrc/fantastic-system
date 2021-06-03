@@ -1,0 +1,66 @@
+.titlebar
+    .drag-region
+    .navigate-buttons
+        .codicon.codicon-arrow-left(
+            @click.prevent="historyBack"
+            :class="{active: routeButtonState.back}")
+        .codicon.codicon-arrow-right(
+            @click.prevent="historyForward"
+            :class="{active: routeButtonState.forward}")
+    .caption
+        | FAN SISTER
+    .login-user(v-if="isLoggedIn === true")
+        el-dropdown(trigger="click" @command="onLoginUserMenuCommand")
+            template(#default)
+                .display-name
+                    | {{ loginUser.apiLoginUser.displayName ?? loginUser.id }}
+            template(#dropdown)
+                el-dropdown-menu
+                    el-dropdown-item(command="myInfo") My Info
+                    el-dropdown-item(
+                        command="logout"
+                        icon="el-icon-switch-button"
+                        divided) Logout
+    .window-controls
+        .codicon.codicon-chrome-minimize(@click.prevent="minimize")
+        .codicon.codicon-chrome-maximize(@click.prevent="maximize")
+        .codicon.codicon-chrome-close(@click.prevent="close")
+.view
+    //- input(type="file" accept="image/png" @change="onChangeFile")
+    .aside
+        .menu
+            template(v-if="isLoggedIn === true")
+                .codicon.codicon-search(
+                    :class="getMenuClass('search-page')"
+                    @click.prevent="selectMenu('search-page')"
+                    title="Search")
+            .codicon.codicon-history(
+                :class="getMenuClass('game-log-list-page')"
+                @click.prevent="selectMenu('game-log-list-page')"
+                title="Game Log List")
+            template(v-if="isLoggedIn === true")
+                .codicon.codicon-organization(
+                    :class="getMenuClass('friend-list-page')"
+                    @click.prevent="selectMenu('friend-list-page')"
+                    title="Friend List")
+                .codicon.codicon-heart(
+                    :class="getMenuClass('favorite-list-page')"
+                    @click.prevent="selectMenu('favorite-list-page')"
+                    title="Favorite List")
+                .codicon.codicon-bell(
+                    :class="getMenuClass('notification-list-page')"
+                    @click.prevent="selectMenu('notification-list-page')"
+                    title="Notification List")
+                .codicon.codicon-law(
+                    :class="getMenuClass('player-moderation-list-page')"
+                    @click.prevent="selectMenu('player-moderation-list-page')"
+                    title="Player Moderation List")
+            .codicon.codicon-account(
+                :class="getMenuClass('login-user-page')"
+                @click.prevent="selectMenu('login-user-page')"
+                title="Login User")
+            .codicon.codicon-settings(
+                :class="getMenuClass('setting-page')"
+                @click.prevent="selectMenu('setting-page')"
+                title="Setting")
+    router-view

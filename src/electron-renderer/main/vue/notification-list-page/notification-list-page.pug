@@ -1,0 +1,10 @@
+.content
+    div
+        el-button(@click.prevent="refresh") refresh
+        el-button(@click.prevent="clearAll") clear all
+        el-button(@click.prevent="testInvite") invite
+        el-button(@click.prevent="testRequestInvite") requestInvite
+    .notification-list
+        notification-list-item(v-for="notification in notificationList"
+            :key="notification.id"
+            :notification="notification")

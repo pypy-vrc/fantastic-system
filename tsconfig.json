@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "module": "CommonJS",
+    "target": "ESNext",
+    "alwaysStrict": true,
+    "strict": true,
+    "moduleResolution": "Node",
+    "preserveConstEnums": true
+  },
+  "exclude": ["node_modules", "dist"]
+}
