@@ -1,0 +1,15 @@
+productName: senapi
+appId: moe.pypy.senpai
+npmRebuild: false
+
+asar: true
+
+directories:
+  output: ./release/
+
+files:
+  - ./dist/
+
+win:
+  icon: ./assets/icons/app.ico
+  target: zip

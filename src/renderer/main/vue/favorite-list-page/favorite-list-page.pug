@@ -1,0 +1,15 @@
+.content
+    div
+        div(@click.prevent="refresh") refresh
+    div friends
+    div(v-for="(favoriteGroup, index) in friendFavoriteGroupList" :key="index")
+        div {{ `${favoriteGroup.apiFavoriteGroup.displayName ?? '?'} (${favoriteGroup.favoriteMap.size}/${favoriteGroup.capacity})` }}
+        favorite-list-item(v-for="[objectId, favorite] of favoriteGroup.favoriteMap" :key="objectId" :favorite="favorite")
+    div worlds
+    div(v-for="(favoriteGroup, index) in worldFavoriteGroupList" :key="index")
+        div {{ `${favoriteGroup.apiFavoriteGroup.displayName ?? '?'} (${favoriteGroup.favoriteMap.size}/${favoriteGroup.capacity})` }}
+        favorite-list-item(v-for="[objectId, favorite] of favoriteGroup.favoriteMap" :key="objectId" :favorite="favorite")
+    div avatars
+    div(v-for="(favoriteGroup, index) in avatarFavoriteGroupList" :key="index")
+        div {{ `${favoriteGroup.apiFavoriteGroup.displayName ?? '?'} (${favoriteGroup.favoriteMap.size}/${favoriteGroup.capacity})` }}
+        favorite-list-item(v-for="[objectId, favorite] of favoriteGroup.favoriteMap" :key="objectId" :favorite="favorite")

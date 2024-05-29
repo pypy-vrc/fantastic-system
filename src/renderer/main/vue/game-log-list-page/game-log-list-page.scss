@@ -1,0 +1,21 @@
+@charset 'UTF-8';
+
+.game-log-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.game-log-list-item {
+  display: flex;
+  font-size: 14px;
+
+  &__time,
+  &__type {
+    flex: none;
+  }
+
+  &__type,
+  &__detail {
+    margin-left: 5px;
+  }
+}
