@@ -1,0 +1,66 @@
+.content
+    div {{ userId }}
+    template(v-if="user")
+        div
+            img(:src="user.apiUser.profilePicOverride || user.apiUser.currentAvatarThumbnailImageUrl"
+                :alt="user.apiUser.displayName ?? user.id"
+                style="width: 256px; height: 192px;")
+        div username={{ user.apiUser.username }}
+        div displayName={{ user.apiUser.displayName }}
+        div trustLevel={{ user.trustLevelText }}
+        div(v-if="user.apiUser.note") note={{ user.apiUser.note }}
+        div(v-if="bio" v-html="bio" style="margin: 5px; padding: 5px; border: 1px solid #333")
+        div last_activity={{ user.apiUser.last_activity }}
+        div last_login={{ user.apiUser.last_login }}
+        div [{{ user.apiUser.status }}] {{ user.apiUser.statusDescription }}
+        div timer={{ instanceDuration }}
+        div(v-if="friendRequest") friendRequest={{ friendRequest ? 'O' : 'X' }}
+        div(v-if="user.incomingFriendRequest") incomingFriendRequest={{ user.incomingFriendRequest }}
+        div(v-if="user.outgoingFriendRequest") outgoingFriendRequest={{ user.outgoingFriendRequest }}
+        div(v-if="playerModeration")
+            | block={{ playerModeration.typeMap.get('block') ? 'O' : 'X' }}
+            | mute={{ playerModeration.typeMap.get('mute') ? 'O' : 'X' }}
+            | unmute={{ playerModeration.typeMap.get('unmute') ? 'O' : 'X' }}
+            | hideAvatar={{ playerModeration.typeMap.get('hideAvatar') ? 'O' : 'X' }}
+            | showAvatar={{ playerModeration.typeMap.get('showAvatar') ? 'O' : 'X' }}
+        div #[location(:location="user.apiUser.location" :clickable="true")]
+        div(v-if="worldInstance !== void 0")
+            div
+                div(@click.prevent="refreshInstance") refresh instance
+            div ownerId=#[a(href="#" @click.prevent="clickInstanceOwner") {{ worldInstance.ownerId }}]
+            div(v-if="instanceOwner !== void 0" style="padding-left: 15px;")
+                div username={{ instanceOwner.apiUser.username }}
+                div displayName={{ instanceOwner.apiUser.displayName }}
+            div players={{ worldInstance.userCount }}/{{ worldInstance.capacity }}
+            //- a(:href="worldLink" target="_blank") {{ worldLink }}
+        div
+            div(@click.prevent="onActionMenuCommand('setNote')") set note
+            div(@click.prevent="onActionMenuCommand('sendFriendRequest')") send friend request
+            div(@click.prevent="onActionMenuCommand('cancelFriendRequest')") cancel friend request
+            div(@click.prevent="onActionMenuCommand('acceptFriendRequest')") accept friend requst
+            div(@click.prevent="onActionMenuCommand('declineFriendRequest')") decline friend requst
+            div(@click.prevent="onActionMenuCommand('unfriend')") unfriend
+            div(@click.prevent="onActionMenuCommand('blockUser')") block user
+            div(@click.prevent="onActionMenuCommand('unblockUser')") unblock user
+            div(@click.prevent="onActionMenuCommand('muteUser')") mute user
+            div(@click.prevent="onActionMenuCommand('unmuteUser')") unmute user
+            div(@click.prevent="onActionMenuCommand('hideAvatar')") hide avatar
+            div(@click.prevent="onActionMenuCommand('showAvatar')") show avatar
+            div(@click.prevent="onActionMenuCommand('sendRequestInvite')") send request invite
+            div(@click.prevent="onActionMenuCommand('sendInvite')") send invite
+            div(@click.prevent="onActionMenuCommand('sendInviteMe')") send invite me
+            div(@click.prevent="onActionMenuCommand('playGame')") play game
+        div(v-if="world !== void 0")
+            div(v-for="[instanceId, instance] of world.instances" :key="instanceId")
+                div #[location(:location="instanceId" :is-hide-world-name="true")]
+                div(v-for="user of instance.users" :key="user.id")
+                    div {{ user.apiUser.displayName ?? user.id }}
+    div
+        div(@click.prevent="removeFavorite") unfavorite
+        div(v-for="(favoriteGroup, index) in friendFavoriteGroupList" :key="index" @click.prevent="addFavorite(favoriteGroup)")
+            template(v-if="favoriteGroup === favorite?.favoriteGroup")
+                | {{ `[HERE] ${favoriteGroup.apiFavoriteGroup.displayName} (${favoriteGroup.favoriteMap.size}/${favoriteGroup.capacity})` }}
+            template(v-else)
+                | {{ `${favoriteGroup.apiFavoriteGroup.displayName} (${favoriteGroup.favoriteMap.size}/${favoriteGroup.capacity})` }}
+    div(style="max-height: 300px; overflow: auto;")
+        pre {{ JSON.stringify(user, null, 2) }}

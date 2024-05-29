@@ -1,0 +1,10 @@
+.content
+    div
+        div(@click.prevent="refresh") refresh
+        div(@click.prevent="clearAll") clear all
+        div(@click.prevent="testInvite") invite
+        div(@click.prevent="testRequestInvite") requestInvite
+    .notification-list
+        notification-list-item(v-for="notification in notificationList"
+            :key="notification.id"
+            :notification="notification")
