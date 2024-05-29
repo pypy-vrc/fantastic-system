@@ -1,0 +1,20 @@
+.friend-list-item
+    .friend-list-item__thumbnail(v-if="user.apiUser.profilePicOverride || user.apiUser.currentAvatarThumbnailImageUrl")
+        img(:src="user.apiUser.profilePicOverride || user.apiUser.currentAvatarThumbnailImageUrl"
+            :alt="user.apiUser.displayName ?? user.id" loading="lazy")
+    .friend-list-item__info(@click.prevent="goUserPage(user.id)")
+        .friend-list-item__name
+            .friend-list-item__display-name(:class="`friend-list-item__display-name--${user.trustLevel}`")
+                | {{ user.apiUser.displayName ?? user.id }}
+            .friend-list-item__status(:class="`friend-list-item__status--${user.status}`")
+        .friend-list-item__location
+            .friend-list-item__location-world
+                template(v-if="user.state === 'active'")
+                    | web
+                template(v-else)
+                    | {{ world?.apiWorld.name ?? user.locationInfo.worldId ?? user.locationInfo.location }}
+            .friend-list-item__location-instance(v-if="user.locationInfo.instanceId !== void 0")
+                | {{ `&nbsp;#${user.locationInfo.name} ${user.locationInfo.displayAccessType}` }}
+    .friend-list-item__info-right
+        .friend-list-item__status-text(v-if="user.apiUser.statusDescription?.length")
+            | {{ user.apiUser.statusDescription }}
