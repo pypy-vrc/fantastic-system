@@ -1,0 +1,7 @@
+.player-moderation-list-item
+    .player-moderation-list-item__info
+        div(@click.prevent="goUserPage(playerModeration.targetUserId)")
+            | {{ playerModeration.targetUserId }}
+    div(v-for="[type, apiPlayerModeration] of playerModeration.typeMap" :key="type")
+        div {{ `${type} | ${formatDate(apiPlayerModeration.created, 'YYYY-MM-DD HH24:MI:SS')}` }}
+        div(@click.prevent="deletePlayerModeration(apiPlayerModeration.targetUserId, type)") remove

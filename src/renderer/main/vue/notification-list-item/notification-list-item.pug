@@ -1,0 +1,17 @@
+.notification-list-item
+    .notification-list-item__info(@click.prevent="clickSender")
+        div {{ `${notification.apiNotification.type} | ${formatDate(notification.time, 'YYYY-MM-DD HH24:MI:SS')} | ${notification.apiNotification.senderUsername}` }}
+    div {{ JSON.stringify(notification.apiNotification.details, null, 2) }}
+    div(v-if="notification.apiNotification.type === 'invite'")
+        location(
+            :location="notification.apiNotification.details.worldId"
+            :world-name="notification.apiNotification.details.worldName"
+            :clickable="true")
+    .notification-list-item__actions
+        div(@click.prevent="hideNotification()") hide
+        template(v-if="notification.apiNotification.type === 'friendRequest'")
+            div(@click.prevent="acceptFriendRequest()") accept
+            div(@click.prevent="declineFriendRequest()") decline
+        template(v-else-if="notification.apiNotification.type === 'invite'")
+            div(@click.prevent="sendInviteMe()") sendInviteMe
+            div(@click.prevent="playGame()") playGame

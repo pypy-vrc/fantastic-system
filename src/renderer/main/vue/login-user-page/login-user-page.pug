@@ -1,0 +1,32 @@
+.content
+    div(v-if="isLoggedIn")
+        div change password
+        form(@submit.prevent="changePassword")
+            input(v-model="changePasswordForm.password" type="password" placeholder="password")
+            input(v-model="changePasswordForm.currentPassword" type="password" placeholder="current password")
+            button(type="submit") change
+        div current user
+        div(style="max-height: 300px; overflow: auto;")
+            pre {{ JSON.stringify(loginUser, null, 2) }}
+        div permission list
+            div(style="max-height: 300px; overflow: auto;")
+                pre {{ JSON.stringify(permissionList, null, 2) }}
+    div(v-else-if="loginUser.apiLoginUser.requiresTwoFactorAuth !== void 0")
+        h3 two factor auth
+        form(@submit.prevent="submitTwoFactorAuth" @reset.prevent="submitLogout")
+            label(v-for="(type, index) in loginUser.apiLoginUser.requiresTwoFactorAuth" :key="index")
+                input(v-model="twoFactorAuthForm.type" type="radio" :value="type")
+                | {{ type }}
+            input(v-model="twoFactorAuthForm.code" type="text" placeholder="Code")
+            button(type="submit") verify
+            button(type="reset") cancel
+    div(v-else)
+        div login
+        form(@submit.prevent="submitLogin")
+            input(v-model="loginForm.username" type="text" placeholder="Username")
+            input(v-model="loginForm.password" type="password" placeholder="Password")
+            button(type="submit") login
+        div recover password
+        form(@submit.prevent="submitRecoverPassword")
+            input(v-model="recoverPasswordForm.email" type="email" placeholder="Email")
+            button(type="submit") send link

@@ -1,0 +1,25 @@
+.content
+    div
+        div(@click.prevent="refresh") refresh
+        div(@click.prevent="testUserDialog") pypy
+        input(type="checkbox" v-model="isFavorite")
+    form(@submit.prevent)
+        input#friend-list-page-search-input(type="text" 
+            :value="searchKeyword"
+            @input="(e) => { searchKeyword = e.target.value; }"
+            placeholder="filter")
+    .friend-list(v-if="loginUser")
+        div me
+        friend-list-item(:user="loginUser")
+    .friend-list(v-if="onlineFriendList.length")
+        div online {{ onlineFriendList.length }}
+        friend-list-item(v-for="user in onlineFriendList" :key="user.id" :user="user")
+    .friend-list(v-if="privateFriendList.length")
+        div private {{ privateFriendList.length }}
+        friend-list-item(v-for="user in privateFriendList" :key="user.id" :user="user")
+    .friend-list(v-if="activeFriendList.length")
+        div web {{ activeFriendList.length }}
+        friend-list-item(v-for="user in activeFriendList" :key="user.id" :user="user")
+    .friend-list(v-if="offlineFriendList.length")
+        div offline {{ offlineFriendList.length }}
+        friend-list-item(v-for="user in offlineFriendList" :key="user.id" :user="user")

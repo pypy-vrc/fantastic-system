@@ -1,0 +1,17 @@
+@charset 'UTF-8';
+@import "../base.scss";
+
+body {
+  background-color: #000;
+  color: #888;
+}
+
+@import "./vue/app/app.scss";
+@import "./vue/location/location.scss";
+@import "./vue/search-page/search-page.scss";
+@import "./vue/login-user-page/login-user-page.scss";
+@import "./vue/friend-list-page/friend-list-page.scss";
+@import "./vue/game-log-list-page/game-log-list-page.scss";
+@import "./vue/notification-list-page/notification-list-page.scss";
+@import "./vue/player-moderation-list-page/player-moderation-list-page.scss";
+@import "./vue/favorite-list-page/favorite-list-page.scss";

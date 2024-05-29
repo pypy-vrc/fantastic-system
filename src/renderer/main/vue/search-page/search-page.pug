@@ -1,0 +1,37 @@
+.content
+    div
+        div search
+        form(@submit.prevent="searchAll" @reset.prevent="reset")
+            input#search-page-search-input(type="text"
+                v-model="searchKeyword" placeholder="keyword")
+            button(type="submit") search
+            button(type="reset") clear
+        span(style="text-color: gray; font-size: 11px")
+            | searches beginning with usr_* or wrld_* perform direct access.
+    div users
+    .search-user-list
+        .search-user-list-item(v-for="[id, apiUser] of userMap" :key="id"
+            @click.prevent="goUserPage(id)")
+            img.search-user-list-item__thumbnail(
+                :src="apiUser.profilePicOverride || apiUser.currentAvatarThumbnailImageUrl"
+                :alt="apiUser.displayName ?? id" loading="lazy")
+            .search-user-list-item__info
+                .search-user-list-item__name {{ apiUser.displayName }}
+    div
+        div(@click.prevent="searchUser"
+            :disabled="!hasMoreUser") more
+    div worlds
+    .search-world-list
+        .search-world-list-item(v-for="[id, apiWorld] of worldMap" :key="id"
+            @click.prevent="goWorldPage(id)")
+            img.search-world-list-item__thumbnail(
+                :src="apiWorld.thumbnailImageUrl"
+                :alt="apiWorld.name ?? id" loading="lazy")
+            .search-world-list-item__info
+                .search-world-list-item__name {{ apiWorld.name }}
+                .search-world-list-item__occupants
+                    .fas.fa-user
+                    | {{ apiWorld.occupants }}
+    div
+        div(@click.prevent="searchWorld"
+            :disabled="!hasMoreWorld") more

@@ -1,0 +1,23 @@
+.content
+    template(v-if="summary")
+        div game timer={{ gameDuration }}
+        div room timer={{ roomDuration }}
+        div
+            location(:location="summary.location" :world-name="summary.worldName" :clickable="true")
+            div(@click.prevent="sendInviteMe(summary.location, summary.worldName)") sendInviteMe
+            div(@click.prevent="playGame(summary.location, summary.worldName)") playGame
+        div(v-for="(roomUser, index) in roomUserList" :key="index" @click.prevent="clickUser(roomUser[0])")
+            | {{ `${index + 1}. ${roomUser[0]} [${getDurationString(roomUser[1])}]` }}
+    div(style="margin-top: 15px; padding-top: 14px; border-top: 1px solid #282828;")
+    el-pagination(
+        layout="sizes, prev, pager, next"
+        v-model:page-size="pageSize"
+        @update:page-size=""
+        :total="gameLogList.length"
+        v-model:current-page="currentPage"
+        @update:current-page="")
+    .game-log-list
+        game-log-list-item(
+            v-for="(gameLog, index) in gameLogList.slice((currentPage - 1) * pageSize, currentPage * pageSize)"
+            :key="index"
+            :game-log="gameLog")

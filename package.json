@@ -1,0 +1,79 @@
+{
+  "name": "senpai1",
+  "version": "0.0.0",
+  "description": "please notice me, senpai. or others will have to die",
+  "keywords": [
+    "vrchat"
+  ],
+  "homepage": "https://github.com/pypy-vrc/senpai#readme",
+  "bugs": {
+    "url": "https://github.com/pypy-vrc/senpai/issues"
+  },
+  "license": "MIT",
+  "author": "pypy <git@pypy.gg>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pypy-vrc/senpai.git"
+  },
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "electron .",
+    "postinstall": "electron-builder install-app-deps && npm run rebuild",
+    "pack": "electron-builder --x64 --dir",
+    "dist": "electron-builder --x64",
+    "rebuild": "electron-rebuild -f",
+    "dev": "npm run dev:main && npm run dev:preload && npm run dev:renderer",
+    "prod": "npm run prod:main && npm run prod:preload && npm run prod:renderer",
+    "dev:main": "webpack --config webpack.main.config.js --mode development",
+    "watch:main": "webpack --config webpack.main.config.js --mode development --watch",
+    "prod:main": "webpack --config webpack.main.config.js --mode production",
+    "dev:preload": "webpack --config webpack.preload.config.js --mode development",
+    "watch:preload": "webpack --config webpack.preload.config.js --mode development --watch",
+    "prod:preload": "webpack --config webpack.preload.config.js --mode production",
+    "dev:renderer": "webpack --config webpack.renderer.config.js --mode development",
+    "watch:renderer": "webpack --config webpack.renderer.config.js --mode development --watch",
+    "prod:renderer": "webpack --config webpack.renderer.config.js --mode production",
+    "lint": "eslint --ext .js,.jsx,.ts src/ && prettier --check src/"
+  },
+  "dependencies": {
+    "native": "file:native"
+  },
+  "devDependencies": {
+    "@electron/rebuild": "^3.6.0",
+    "@fortawesome/fontawesome-free": "^6.5.2",
+    "@intlify/vue-i18n-loader": "^4.2.0",
+    "@types/node": "^20.14.10",
+    "@typescript-eslint/eslint-plugin": "^7.16.0",
+    "@typescript-eslint/parser": "^7.16.0",
+    "@vscode/codicons": "^0.0.36",
+    "@vue/compiler-sfc": "^3.4.31",
+    "copy-webpack-plugin": "^12.0.2",
+    "css-loader": "^7.1.2",
+    "electron": "^31.2.0",
+    "electron-builder": "^24.13.3",
+    "electron-rebuild": "^3.2.9",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "famfamfam-flags": "^1.0.0",
+    "fork-ts-checker-webpack-plugin": "^9.0.2",
+    "html-webpack-plugin": "^5.6.0",
+    "idb": "^8.0.0",
+    "mini-css-extract-plugin": "^2.9.0",
+    "node-addon-api": "^8.1.0",
+    "noty": "^3.2.0-beta-deprecated",
+    "prettier": "^3.3.2",
+    "pug": "^3.0.3",
+    "pug-plain-loader": "^1.1.0",
+    "raw-loader": "^4.0.2",
+    "sass": "^1.77.8",
+    "sass-loader": "^14.2.1",
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.5.3",
+    "vue": "^3.4.31",
+    "vue-i18n": "^9.13.1",
+    "vue-loader": "^17.4.2",
+    "vue-router": "^4.4.0",
+    "webpack": "^5.93.0",
+    "webpack-cli": "^5.1.4"
+  }
+}
