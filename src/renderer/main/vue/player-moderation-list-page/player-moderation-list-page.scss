@@ -1,0 +1,19 @@
+.player-moderation-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.player-moderation-list-item {
+  padding: 9px 10px 10px;
+  border-top: 1px solid #282828;
+  display: flex;
+  flex-direction: column;
+
+  &__info {
+    display: flex;
+  }
+
+  &__actions {
+    display: flex;
+  }
+}

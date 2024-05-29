@@ -1,0 +1,43 @@
+.favorite-list-item
+    template(v-if="user !== void 0")
+        .favorite-list-item__thumbnail(v-if="user.apiUser.profilePicOverride || user.apiUser.currentAvatarThumbnailImageUrl")
+            img(:src="user.apiUser.profilePicOverride || user.apiUser.currentAvatarThumbnailImageUrl"
+                :alt="user.apiUser.displayName ?? user.id" loading="lazy")
+        .favorite-list-item__info(@click.prevent="goUserPage(user.id)")
+            .favorite-list-item__name
+                .favorite-list-item__display-name(:class="`favorite-list-item__display-name--${user.trustLevel}`")
+                    | {{ user.apiUser.displayName ?? user.id }}
+                .favorite-list-item__status(:class="`favorite-list-item__status--${user.status}`")
+            .favorite-list-item__location
+                .favorite-list-item__location-world
+                    template(v-if="user.state === 'active'")
+                        | web
+                    template(v-else)
+                        | {{ userWorld?.apiWorld.name ?? user.locationInfo.worldId ?? user.locationInfo.location }}
+                .favorite-list-item__location-instance(v-if="user.locationInfo.instanceId !== void 0")
+                    | {{ `&nbsp;#${user.locationInfo.name} ${user.locationInfo.displayAccessType}` }}
+        .favorite-list-item__info-right
+            .favorite-list-item__status-text(v-if="user.apiUser.statusDescription?.length")
+                | {{ user.apiUser.statusDescription }}
+    template(v-else-if="world !== void 0")
+        .favorite-list-item__thumbnail(v-if="world.apiWorld.thumbnailImageUrl")
+            img(:src="world.apiWorld.thumbnailImageUrl"
+                :alt="world.apiWorld.name ?? world.id" loading="lazy")
+        .favorite-list-item__info(@click.prevent="goWorldPage(world.id)")
+            .favorite-list-item__name
+                .favorite-list-item__display-name
+                    | {{ world.apiWorld.name ?? world.id }}
+            .favorite-list-item__location(v-if="world.apiWorld.occupants")
+                .favorite-list-item__location-world
+                    .fas.fa-user
+                    | {{ `&nbsp;${world.apiWorld.occupants}` }}
+    template(v-else-if="avatar !== void 0")
+        .favorite-list-item__thumbnail(v-if="avatar.apiAvatar.thumbnailImageUrl")
+            img(:src="avatar.apiAvatar.thumbnailImageUrl"
+                :alt="avatar.apiAvatar.name ?? world.id" loading="lazy")
+        .favorite-list-item__info(@click.prevent="goAvatarPage(avatar.id)")
+            .favorite-list-item__name
+                .favorite-list-item__display-name
+                    | {{ avatar.apiAvatar.name ?? world.id }}
+    template(v-else)
+        | {{ favorite.objectId }}

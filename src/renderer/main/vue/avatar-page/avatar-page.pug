@@ -1,0 +1,21 @@
+.content
+    div {{ avatarId }}
+    template(v-if="avatar")
+        div
+            img(:src="avatar.apiAvatar.thumbnailImageUrl"
+                :alt="avatar.apiAvatar.displayName ?? avatar.id"
+                style="width: 256px; height: 192px;")
+        div name={{ avatar.apiAvatar.name }}
+        div description={{ avatar.apiAvatar.description }}
+        div authorId=#[a(href="#" @click.prevent="goUserPage(avatar.apiAvatar.authorId)") {{ avatar.apiAvatar.authorId }}]
+        div authorName={{ avatar.apiAvatar.authorName }}
+        div releaseStatus={{ avatar.apiAvatar.releaseStatus }}
+    div
+        div(@click.prevent="removeFavorite") unfavorite
+        div(v-for="(favoriteGroup, index) in avatarFavoriteGroupList" :key="index" @click.prevent="addFavorite(favoriteGroup)")
+            template(v-if="favoriteGroup === favorite?.favoriteGroup")
+                | {{ `[HERE] ${favoriteGroup.apiFavoriteGroup.displayName} (${favoriteGroup.favoriteMap.size}/${favoriteGroup.capacity})` }}
+            template(v-else)
+                | {{ `${favoriteGroup.apiFavoriteGroup.displayName} (${favoriteGroup.favoriteMap.size}/${favoriteGroup.capacity})` }}
+    div(style="max-height: 300px; overflow: auto;")
+        pre {{ JSON.stringify(avatar, null, 2) }}
