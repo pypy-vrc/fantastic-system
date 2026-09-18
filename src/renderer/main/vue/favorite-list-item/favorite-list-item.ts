@@ -1,11 +1,17 @@
-import * as vue from "vue";
-import * as router from "../../router";
-import * as api from "../../game/api";
-import * as VueLocation from "../location/index.vue";
+import { computed } from "vue";
+import { goAvatarPage, goUserPage, goWorldPage } from "../../router.ts";
+import {
+  ApiFavoriteGroupType,
+  avatarMap,
+  userMap,
+  worldMap,
+  type Favorite,
+} from "../../game/api/index.ts";
+import VueLocation from "../location/index.vue";
 
-interface Props {
-  favorite: api.Favorite;
-}
+type Props = {
+  favorite: Favorite;
+};
 
 export default {
   name: "FavoriteListItem",
@@ -13,27 +19,27 @@ export default {
     favorite: Object,
   },
   components: {
-    Location: VueLocation.default,
+    Location: VueLocation,
   },
   setup(props: Props) {
-    const favoriteRef = vue.computed(() => props.favorite);
-    const userRef = vue.computed(() => {
+    const favoriteRef = computed(() => props.favorite);
+    const userRef = computed(() => {
       const { apiFavorite } = favoriteRef.value;
 
       if (
         apiFavorite.favoriteId === void 0 ||
-        apiFavorite.type !== api.ApiFavoriteGroupType.Friend
+        apiFavorite.type !== ApiFavoriteGroupType.Friend
       ) {
         return;
       }
 
-      return api.userMap.get(apiFavorite.favoriteId);
+      return userMap.get(apiFavorite.favoriteId);
     });
 
     return {
       favorite: favoriteRef,
       user: userRef,
-      userWorld: vue.computed(() => {
+      userWorld: computed(() => {
         const user = userRef.value;
         if (user === void 0) {
           return;
@@ -44,38 +50,38 @@ export default {
           return;
         }
 
-        return api.worldMap.get(worldId);
+        return worldMap.get(worldId);
       }),
-      world: vue.computed(() => {
+      world: computed(() => {
         const { apiFavorite } = favoriteRef.value;
 
         if (
           apiFavorite.favoriteId === void 0 ||
-          apiFavorite.type !== api.ApiFavoriteGroupType.World
+          apiFavorite.type !== ApiFavoriteGroupType.World
         ) {
           return;
         }
 
-        return api.worldMap.get(apiFavorite.favoriteId);
+        return worldMap.get(apiFavorite.favoriteId);
       }),
-      avatar: vue.computed(() => {
+      avatar: computed(() => {
         const { apiFavorite } = favoriteRef.value;
 
         if (
           apiFavorite.favoriteId === void 0 ||
-          apiFavorite.type !== api.ApiFavoriteGroupType.Avatar
+          apiFavorite.type !== ApiFavoriteGroupType.Avatar
         ) {
           return;
         }
 
-        return api.avatarMap.get(apiFavorite.favoriteId);
+        return avatarMap.get(apiFavorite.favoriteId);
       }),
-      thumbnailUrl: vue.computed(() => {
+      thumbnailUrl: computed(() => {
         //
       }),
-      goUserPage: router.goUserPage,
-      goWorldPage: router.goWorldPage,
-      goAvatarPage: router.goAvatarPage,
+      goUserPage: goUserPage,
+      goWorldPage: goWorldPage,
+      goAvatarPage: goAvatarPage,
     };
   },
 };

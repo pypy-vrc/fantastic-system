@@ -1,11 +1,11 @@
-import * as vue from "vue";
-import * as noty from "noty";
-import * as util from "../../../common/util";
-import { VRChatLogType } from "../../../common/constants";
+import { reactive, ref } from "vue";
+import noty from "noty";
+import { escapeHtml } from "../../../common/util.ts";
+import { VRChatLogType } from "../../../common/constants.ts";
 
 const { ipcRenderer } = window;
 
-interface LogContext {
+type LogContext = {
   gameStartTime: number;
   roomJoinTime: number;
   roomLeaveTime: number;
@@ -13,10 +13,10 @@ interface LogContext {
   location: string;
   worldName: string;
   roomUserMap: Map<string, number>;
-}
+};
 
-export const instanceLogRows = vue.reactive<unknown[][]>([]);
-export const summary = vue.ref<LogContext | undefined>(void 0);
+export const instanceLogRows = reactive<unknown[][]>([]);
+export const logContext = ref<LogContext | undefined>(void 0);
 
 let isLogInit = false;
 let isLogSync = false;
@@ -37,7 +37,7 @@ function setLogSortTimer() {
 }
 
 function showNoty(text: string) {
-  new noty.default({
+  new noty({
     type: "alert",
     layout: "topRight",
     theme: "sunset",
@@ -64,14 +64,14 @@ ipcRenderer.on("vrchatLog", (_e, fileName: string, rows: unknown[][]) => {
 
   let context = logContextMap.get(fileName);
   if (context === void 0) {
-    context = vue.reactive<LogContext>({
+    context = reactive<LogContext>({
       gameStartTime: 0,
       roomJoinTime: 0,
       roomLeaveTime: 0,
       isInRoom: false,
       location: "",
       worldName: "",
-      roomUserMap: vue.reactive(new Map<string, number>()),
+      roomUserMap: reactive(new Map<string, number>()),
     });
     logContextMap.set(fileName, context);
   }
@@ -112,7 +112,7 @@ ipcRenderer.on("vrchatLog", (_e, fileName: string, rows: unknown[][]) => {
         instanceLogRows.push(row);
 
         if (isNoty) {
-          showNoty(`Joining room: ${util.escapeHtml(row[3] as string)}`);
+          showNoty(`Joining room: ${escapeHtml(row[3] as string)}`);
         }
         break;
       }
@@ -136,7 +136,7 @@ ipcRenderer.on("vrchatLog", (_e, fileName: string, rows: unknown[][]) => {
         instanceLogRows.push(row);
 
         if (isNoty && time !== context.roomJoinTime) {
-          showNoty(`Player joined: ${util.escapeHtml(row[2] as string)}`);
+          showNoty(`Player joined: ${escapeHtml(row[2] as string)}`);
         }
         break;
       }
@@ -161,7 +161,7 @@ ipcRenderer.on("vrchatLog", (_e, fileName: string, rows: unknown[][]) => {
         ]);
 
         if (isNoty) {
-          showNoty(`Player left: ${util.escapeHtml(row[2] as string)}`);
+          showNoty(`Player left: ${escapeHtml(row[2] as string)}`);
         }
         break;
       }
@@ -170,7 +170,7 @@ ipcRenderer.on("vrchatLog", (_e, fileName: string, rows: unknown[][]) => {
 
   if (time >= lastLogTime) {
     lastLogTime = time;
-    summary.value = context;
+    logContext.value = context;
   }
 
   if (!isLogSync) {

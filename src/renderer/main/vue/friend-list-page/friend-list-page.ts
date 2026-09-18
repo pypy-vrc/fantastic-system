@@ -1,54 +1,64 @@
-import * as vue from "vue";
-import { goUserPage } from "../../router";
-import * as api from "../../game/api";
-import * as VueLocation from "../location/index.vue";
-import * as VueFriendListItem from "../friend-list-item/index.vue";
+import { computed, ref } from "vue";
+import { goUserPage } from "../../router.ts";
+import {
+  activeFriendSet,
+  favoriteMap,
+  isLoggedIn,
+  loginUser,
+  offlineFriendSet,
+  onlineFriendSet,
+  privateFriendSet,
+  refreshFriend,
+  userMap,
+  type User,
+} from "../../game/api/index.ts";
+import VueLocation from "../location/index.vue";
+import VueFriendListItem from "../friend-list-item/index.vue";
 
-const searchKeywordRef = vue.ref("");
-const isFavoriteRef = vue.ref(false);
+const searchKeywordRef = ref("");
+const isFavoriteRef = ref(false);
 
-const loginUserRef = vue.computed(() => {
+const loginUserRef = computed(() => {
   // console.log('computed loginUser');
-  return api.userMap.get(api.loginUser.id);
+  return userMap.get(loginUser.id);
 });
 
-const onlineFriendListRef = vue.computed(() => {
+const onlineFriendListRef = computed(() => {
   // console.log('computed onlineFriends');
-  const array = searchKeywordFilter(api.onlineFriendSet);
+  const array = searchKeywordFilter(onlineFriendSet);
   array.sort(sortFriendList);
   return array;
 });
 
-const privateFriendListRef = vue.computed(() => {
+const privateFriendListRef = computed(() => {
   // console.log('computed privateFriends');
-  const array = searchKeywordFilter(api.privateFriendSet);
+  const array = searchKeywordFilter(privateFriendSet);
   array.sort(sortFriendList);
   return array;
 });
 
-const activeFriendListRef = vue.computed(() => {
+const activeFriendListRef = computed(() => {
   // console.log('computed activeFriends');
-  const array = searchKeywordFilter(api.activeFriendSet);
+  const array = searchKeywordFilter(activeFriendSet);
   array.sort(sortFriendList);
   return array;
 });
 
-const offlineFriendListRef = vue.computed(() => {
+const offlineFriendListRef = computed(() => {
   // console.log('computed offlineFriends');
-  const array = searchKeywordFilter(api.offlineFriendSet);
+  const array = searchKeywordFilter(offlineFriendSet);
   array.sort(sortFriendList);
   return array;
 });
 
-function sortFriendList(a: api.User, b: api.User) {
+function sortFriendList(a: User, b: User) {
   return b.activityTime - a.activityTime;
 }
 
-function searchKeywordFilter(userSet: Set<api.User>) {
-  const { favoriteMap } = api;
+function searchKeywordFilter(userSet: Set<User>) {
   const keyword = searchKeywordRef.value.replace(/\s+/g, "").toUpperCase();
   const isFavorite = isFavoriteRef.value;
-  const array: api.User[] = [];
+  const array: User[] = [];
 
   if (keyword.length === 0) {
     if (!isFavorite) {
@@ -87,12 +97,12 @@ function searchKeywordFilter(userSet: Set<api.User>) {
 export default {
   name: "FriendListPage",
   components: {
-    Location: VueLocation.default,
-    FriendListItem: VueFriendListItem.default,
+    Location: VueLocation,
+    FriendListItem: VueFriendListItem,
   },
   setup() {
     return {
-      isLoggedIn: api.isLoggedIn,
+      isLoggedIn: isLoggedIn,
       loginUser: loginUserRef,
       searchKeyword: searchKeywordRef,
       isFavorite: isFavoriteRef,
@@ -100,7 +110,7 @@ export default {
       privateFriendList: privateFriendListRef,
       activeFriendList: activeFriendListRef,
       offlineFriendList: offlineFriendListRef,
-      refresh: api.refreshFriend,
+      refresh: refreshFriend,
       testUserDialog() {
         goUserPage("usr_4f76a584-9d4b-46f6-8209-8305eb683661");
       },

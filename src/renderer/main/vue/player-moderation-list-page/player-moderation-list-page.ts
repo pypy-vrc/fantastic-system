@@ -1,9 +1,16 @@
-import * as vue from "vue";
-import * as api from "../../game/api";
-import * as VuePlayerModerationListItem from "../player-moderation-list-item/index.vue";
+import { computed } from "vue";
+import {
+  clearAllPlayerModeration,
+  deletePlayerModeration,
+  playerModerationMap,
+  refreshPlayerModeration,
+  sendPlayerModeration,
+  type ApiPlayerModerationTypeValue,
+} from "../../game/api/index.ts";
+import VuePlayerModerationListItem from "../player-moderation-list-item/index.vue";
 
-const playerModerationListRef = vue.computed(() => {
-  const array = [...api.playerModerationMap.values()];
+const playerModerationListRef = computed(() => {
+  const array = [...playerModerationMap.values()];
   array.sort((a, b) => b.time - a.time);
   return array;
 });
@@ -15,15 +22,15 @@ async function clearAll() {
       return;
     }
 
-    await api.clearAllPlayerModeration();
+    await clearAllPlayerModeration();
   } catch (err) {
     console.error(err);
   }
 }
 
-async function sendPlayerModeration(
+async function doSendPlayerModeration(
   moderated: string,
-  type: api.ApiPlayerModerationType,
+  type: ApiPlayerModerationTypeValue,
 ) {
   try {
     const action = confirm("sendPlayerModeration");
@@ -31,15 +38,15 @@ async function sendPlayerModeration(
       return;
     }
 
-    await api.sendPlayerModeration(moderated, type);
+    await sendPlayerModeration(moderated, type);
   } catch (err) {
     console.error(err);
   }
 }
 
-async function deletePlayerModeration(
+async function doDeletePlayerModeration(
   moderated: string,
-  type: api.ApiPlayerModerationType,
+  type: ApiPlayerModerationTypeValue,
 ) {
   try {
     const action = confirm("deletePlayerModeration");
@@ -47,7 +54,7 @@ async function deletePlayerModeration(
       return;
     }
 
-    await api.deletePlayerModeration(moderated, type);
+    await deletePlayerModeration(moderated, type);
   } catch (err) {
     console.error(err);
   }
@@ -56,15 +63,15 @@ async function deletePlayerModeration(
 export default {
   name: "PlayerModerationListPage",
   components: {
-    PlayerModerationListItem: VuePlayerModerationListItem.default,
+    PlayerModerationListItem: VuePlayerModerationListItem,
   },
   setup() {
     return {
       playerModerationList: playerModerationListRef,
-      refresh: api.refreshPlayerModeration,
+      refresh: refreshPlayerModeration,
       clearAll,
-      sendPlayerModeration,
-      deletePlayerModeration,
+      sendPlayerModeration: doSendPlayerModeration,
+      deletePlayerModeration: doDeletePlayerModeration,
     };
   },
 };

@@ -1,25 +1,31 @@
-import * as vue from "vue";
-import { goUserPage, goWorldPage } from "../../router";
-import * as api from "../../game/api";
-import * as loading from "../loading";
+import { reactive, ref } from "vue";
+import { goUserPage, goWorldPage } from "../../router.ts";
+import {
+  ApiStatusCode,
+  fetchUserList,
+  fetchWorldList,
+  type ApiUser,
+  type ApiWorld,
+} from "../../game/api/index.ts";
+import { decrementLoading, incrementLoading } from "../loading.ts";
 
-const searchKeywordRef = vue.ref("");
-const hasMoreUserRef = vue.ref(false);
-const hasMoreWorldRef = vue.ref(false);
-const userMap = vue.reactive(new Map<string, api.ApiUser>());
-const worldMap = vue.reactive(new Map<string, api.ApiWorld>());
+const searchKeywordRef = ref("");
+const hasMoreUserRef = ref(false);
+const hasMoreWorldRef = ref(false);
+const userMap = reactive(new Map<string, ApiUser>());
+const worldMap = reactive(new Map<string, ApiWorld>());
 
 async function searchUser() {
-  loading.increment();
+  incrementLoading();
 
   try {
-    const { status, data } = await api.fetchUserList(
+    const { status, data } = await fetchUserList(
       searchKeywordRef.value,
       10,
       userMap.size,
     );
 
-    if (status === api.ApiStatusCode.OK && data !== void 0) {
+    if (status === ApiStatusCode.OK && data !== void 0) {
       for (const apiUser of data) {
         const { id } = apiUser;
         if (id === void 0) {
@@ -35,20 +41,20 @@ async function searchUser() {
     console.error(err);
   }
 
-  loading.decrement();
+  decrementLoading();
 }
 
 async function searchWorld() {
-  loading.increment();
+  incrementLoading();
 
   try {
-    const { status, data } = await api.fetchWorldList(
+    const { status, data } = await fetchWorldList(
       searchKeywordRef.value,
       10,
       worldMap.size,
     );
 
-    if (status === api.ApiStatusCode.OK && data !== void 0) {
+    if (status === ApiStatusCode.OK && data !== void 0) {
       for (const apiWorld of data) {
         const { id } = apiWorld;
         if (id === void 0) {
@@ -64,7 +70,7 @@ async function searchWorld() {
     console.error(err);
   }
 
-  loading.decrement();
+  decrementLoading();
 }
 
 async function searchAll() {
@@ -95,7 +101,7 @@ async function searchAll() {
     return;
   }
 
-  loading.increment();
+  incrementLoading();
   try {
     userMap.clear();
     worldMap.clear();
@@ -104,7 +110,7 @@ async function searchAll() {
     console.error(err);
   }
 
-  loading.decrement();
+  decrementLoading();
 }
 
 function reset() {

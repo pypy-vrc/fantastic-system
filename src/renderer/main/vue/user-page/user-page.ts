@@ -1,29 +1,60 @@
-import * as vue from "vue";
+import { computed, ref, watchEffect } from "vue";
 import type * as vueRouter from "vue-router";
-import * as util from "../../../../common/util";
-import * as pubsub from "../../../../common/pubsub";
-import * as router from "../../router";
-import * as api from "../../game/api";
-import * as log from "../../game/log";
-import { now } from "../clock";
-import * as VueLocation from "../location/index.vue";
+import { escapeHtml, getDurationString, nop } from "../../../../common/util.ts";
+import { subscribe } from "../../../../common/pubsub.ts";
+import { goUserPage } from "../../router.ts";
+import {
+  acceptNotification,
+  addToFavoriteGroup,
+  ApiFavoriteGroupType,
+  ApiPlatform,
+  ApiPlayerModerationType,
+  ApiStatusCode,
+  cancelFriendRequest,
+  deletePlayerModeration,
+  favoriteMap,
+  fetchFriendStatus,
+  fetchUser,
+  fetchWorldInstance,
+  fetchWorldInstanceShortName,
+  friendFavoriteGroupList,
+  friendRequestMap,
+  hideNotification,
+  inviteMe,
+  parseLocation,
+  playerModerationMap,
+  removeFromFavoriteGroup,
+  saveUserNote,
+  sendFriendRequest,
+  sendInvite,
+  sendPlayerModeration,
+  sendRequestInvite,
+  unfriend,
+  userMap,
+  worldMap,
+  type ApiWorldInstance,
+  type FavoriteGroup,
+} from "../../game/api/index.ts";
+import { logContext } from "../../game/log.ts";
+import { now } from "../clock.ts";
+import VueLocation from "../location/index.vue";
 
 const { ipcRenderer } = window;
 
-const userIdRef = vue.ref("");
-const worldInstanceRef = vue.ref<api.ApiWorldInstance | undefined>(void 0);
-const worldLinkRef = vue.ref("");
+const userIdRef = ref("");
+const worldInstanceRef = ref<ApiWorldInstance | undefined>(void 0);
+const worldLinkRef = ref("");
 
-const userRef = vue.computed(() => {
+const userRef = computed(() => {
   console.log("UserPage:userRef", userIdRef.value);
-  return api.userMap.get(userIdRef.value);
+  return userMap.get(userIdRef.value);
 });
 
-const bioRef = vue.computed(() =>
-  util.escapeHtml(userRef.value?.apiUser.bio ?? "").replace(/\n/g, "<br>"),
+const bioRef = computed(() =>
+  escapeHtml(userRef.value?.apiUser.bio || "").replace(/\n/g, "<br>"),
 );
 
-const worldRef = vue.computed(() => {
+const worldRef = computed(() => {
   console.log("UserPage:worldRef", userIdRef.value);
 
   const user = userRef.value;
@@ -36,24 +67,24 @@ const worldRef = vue.computed(() => {
     return;
   }
 
-  return api.worldMap.get(worldId);
+  return worldMap.get(worldId);
 });
 
-const friendRequestRef = vue.computed(() => {
-  return api.friendRequestMap.get(userIdRef.value);
+const friendRequestRef = computed(() => {
+  return friendRequestMap.get(userIdRef.value);
 });
 
-const playerModerationRef = vue.computed(() => {
+const playerModerationRef = computed(() => {
   console.log("UserPage:playerModerationRef", userIdRef.value);
-  return api.playerModerationMap.get(userIdRef.value);
+  return playerModerationMap.get(userIdRef.value);
 });
 
-const favoriteRef = vue.computed(() => {
+const favoriteRef = computed(() => {
   console.log("UserPage:favoriteRef", userIdRef.value);
-  return api.favoriteMap.get(userIdRef.value);
+  return favoriteMap.get(userIdRef.value);
 });
 
-const instanceDurationRef = vue.computed(() => {
+const instanceDurationRef = computed(() => {
   const user = userRef.value;
   if (user === void 0) {
     return "";
@@ -69,10 +100,10 @@ const instanceDurationRef = vue.computed(() => {
     return "";
   }
 
-  return util.getDurationString(Math.floor(time / 1000));
+  return getDurationString(Math.floor(time / 1000));
 });
 
-const instanceOwnerRef = vue.computed(() => {
+const instanceOwnerRef = computed(() => {
   console.log("UserPage:instanceOwnerRef");
 
   const worldInstance = worldInstanceRef.value;
@@ -85,10 +116,10 @@ const instanceOwnerRef = vue.computed(() => {
     return;
   }
 
-  return api.userMap.get(ownerId);
+  return userMap.get(ownerId);
 });
 
-pubsub.subscribe(
+subscribe(
   "router:after-each",
   ({ name, params }: vueRouter.RouteLocationNormalized) => {
     if (name !== "user-page") {
@@ -97,20 +128,20 @@ pubsub.subscribe(
 
     const userId = params.id as string;
     console.log("UserPage", userId);
-    setUserId(userId).catch(util.nop);
+    setUserId(userId).catch(nop);
   },
 );
 
 async function setUserId(userId: string) {
-  if (userIdRef.value === userId && api.userMap.has(userId)) {
+  if (userIdRef.value === userId && userMap.has(userId)) {
     return;
   }
 
   userIdRef.value = userId;
 
   try {
-    await api.fetchUser(userId);
-    await api.fetchFriendStatus(userId);
+    await fetchUser(userId);
+    await fetchFriendStatus(userId);
   } catch (err) {
     console.error(err);
   }
@@ -127,7 +158,7 @@ function clickInstanceOwner() {
     return;
   }
 
-  router.goUserPage(ownerId);
+  goUserPage(ownerId);
 }
 
 async function refreshInstance() {
@@ -144,34 +175,34 @@ async function refreshInstance() {
       return;
     }
 
-    const { status, data: apiWorldInstance } = await api.fetchWorldInstance(
+    const { status, data: apiWorldInstance } = await fetchWorldInstance(
       locationInfo.location,
     );
-    if (status !== api.ApiStatusCode.OK || apiWorldInstance === void 0) {
+    if (status !== ApiStatusCode.OK || apiWorldInstance === void 0) {
       return;
     }
 
     worldInstanceRef.value = apiWorldInstance;
-    worldLinkRef.value = `https://vrch.at/${apiWorldInstance.shortName ?? ""}`;
+    worldLinkRef.value = `https://vrch.at/${apiWorldInstance.shortName || ""}`;
 
     const { ownerId } = apiWorldInstance;
     if (
       typeof ownerId !== "string" ||
       ownerId.length === 0 ||
       ownerId.startsWith("grp_") ||
-      api.userMap.has(ownerId)
+      userMap.has(ownerId)
     ) {
       return;
     }
 
-    await api.fetchUser(ownerId);
+    await fetchUser(ownerId);
   } catch (err) {
     console.error(err);
   }
 }
 
-vue.watchEffect(() => {
-  refreshInstance().catch(util.nop);
+watchEffect(() => {
+  refreshInstance().catch(nop);
 });
 
 async function onActionMenuCommand(command: string) {
@@ -189,7 +220,7 @@ async function onActionMenuCommand(command: string) {
           break;
         }
 
-        await api.sendFriendRequest(user.id);
+        await sendFriendRequest(user.id);
         break;
       }
 
@@ -199,7 +230,7 @@ async function onActionMenuCommand(command: string) {
           break;
         }
 
-        await api.cancelFriendRequest(user.id);
+        await cancelFriendRequest(user.id);
         break;
       }
 
@@ -209,12 +240,12 @@ async function onActionMenuCommand(command: string) {
           break;
         }
 
-        const notification = api.friendRequestMap.get(user.id);
+        const notification = friendRequestMap.get(user.id);
         if (notification === void 0) {
           break;
         }
 
-        await api.acceptNotification(notification.id);
+        await acceptNotification(notification.id);
         break;
       }
 
@@ -224,12 +255,12 @@ async function onActionMenuCommand(command: string) {
           break;
         }
 
-        const notification = api.friendRequestMap.get(user.id);
+        const notification = friendRequestMap.get(user.id);
         if (notification === void 0) {
           break;
         }
 
-        await api.hideNotification(notification.id);
+        await hideNotification(notification.id);
         break;
       }
 
@@ -239,7 +270,7 @@ async function onActionMenuCommand(command: string) {
           break;
         }
 
-        await api.unfriend(user.id);
+        await unfriend(user.id);
         break;
       }
 
@@ -249,10 +280,7 @@ async function onActionMenuCommand(command: string) {
           break;
         }
 
-        await api.sendPlayerModeration(
-          user.id,
-          api.ApiPlayerModerationType.Block,
-        );
+        await sendPlayerModeration(user.id, ApiPlayerModerationType.Block);
         break;
       }
 
@@ -262,10 +290,7 @@ async function onActionMenuCommand(command: string) {
           break;
         }
 
-        await api.deletePlayerModeration(
-          user.id,
-          api.ApiPlayerModerationType.Block,
-        );
+        await deletePlayerModeration(user.id, ApiPlayerModerationType.Block);
         break;
       }
 
@@ -275,14 +300,8 @@ async function onActionMenuCommand(command: string) {
           break;
         }
 
-        await api.sendPlayerModeration(
-          user.id,
-          api.ApiPlayerModerationType.Mute,
-        );
-        await api.deletePlayerModeration(
-          user.id,
-          api.ApiPlayerModerationType.Unmute,
-        );
+        await sendPlayerModeration(user.id, ApiPlayerModerationType.Mute);
+        await deletePlayerModeration(user.id, ApiPlayerModerationType.Unmute);
         break;
       }
 
@@ -292,14 +311,8 @@ async function onActionMenuCommand(command: string) {
           break;
         }
 
-        await api.sendPlayerModeration(
-          user.id,
-          api.ApiPlayerModerationType.Unmute,
-        );
-        await api.deletePlayerModeration(
-          user.id,
-          api.ApiPlayerModerationType.Mute,
-        );
+        await sendPlayerModeration(user.id, ApiPlayerModerationType.Unmute);
+        await deletePlayerModeration(user.id, ApiPlayerModerationType.Mute);
         break;
       }
 
@@ -309,13 +322,10 @@ async function onActionMenuCommand(command: string) {
           break;
         }
 
-        await api.sendPlayerModeration(
+        await sendPlayerModeration(user.id, ApiPlayerModerationType.HideAvatar);
+        await deletePlayerModeration(
           user.id,
-          api.ApiPlayerModerationType.HideAvatar,
-        );
-        await api.deletePlayerModeration(
-          user.id,
-          api.ApiPlayerModerationType.ShowAvatar,
+          ApiPlayerModerationType.ShowAvatar,
         );
         break;
       }
@@ -326,13 +336,10 @@ async function onActionMenuCommand(command: string) {
           break;
         }
 
-        await api.sendPlayerModeration(
+        await sendPlayerModeration(user.id, ApiPlayerModerationType.ShowAvatar);
+        await deletePlayerModeration(
           user.id,
-          api.ApiPlayerModerationType.ShowAvatar,
-        );
-        await api.deletePlayerModeration(
-          user.id,
-          api.ApiPlayerModerationType.HideAvatar,
+          ApiPlayerModerationType.HideAvatar,
         );
         break;
       }
@@ -343,20 +350,20 @@ async function onActionMenuCommand(command: string) {
           break;
         }
 
-        await api.sendRequestInvite(user.id, {
-          platform: api.ApiPlatform.UnknownPlatform,
+        await sendRequestInvite(user.id, {
+          platform: ApiPlatform.UnknownPlatform,
         });
         break;
       }
 
       case "sendInvite": {
-        const summary = log.summary.value;
+        const summary = logContext.value;
         if (summary === void 0) {
           break;
         }
 
         const { location } = summary;
-        const locationInfo = api.parseLocation(location);
+        const locationInfo = parseLocation(location);
         if (locationInfo.instanceId === void 0) {
           break;
         }
@@ -366,7 +373,7 @@ async function onActionMenuCommand(command: string) {
           break;
         }
 
-        await api.sendInvite(user.id, {
+        await sendInvite(user.id, {
           instanceId: location,
           worldId: location,
         });
@@ -384,7 +391,7 @@ async function onActionMenuCommand(command: string) {
           break;
         }
 
-        await api.inviteMe(locationInfo.location);
+        await inviteMe(locationInfo.location);
         break;
       }
 
@@ -399,14 +406,14 @@ async function onActionMenuCommand(command: string) {
           break;
         }
 
-        const response = await api.fetchWorldInstanceShortName(
+        const response = await fetchWorldInstanceShortName(
           locationInfo.location,
         );
 
         await ipcRenderer.invoke(
           "native:playGame",
           `vrchat://launch?id=${locationInfo.location}&shortName=${
-            response.data?.secureName ?? ""
+            response.data?.secureName || ""
           }`,
         );
         break;
@@ -417,7 +424,7 @@ async function onActionMenuCommand(command: string) {
         if (typeof note !== "string") {
           break;
         }
-        await api.saveUserNote(user.id, note);
+        await saveUserNote(user.id, note);
       }
     }
   } catch (err) {
@@ -425,15 +432,15 @@ async function onActionMenuCommand(command: string) {
   }
 }
 
-async function addFavorite(favoriteGroup: api.FavoriteGroup) {
+async function addFavorite(favoriteGroup: FavoriteGroup) {
   try {
     const action = confirm("addFavorite");
     if (!action) {
       return;
     }
 
-    await api.addToFavoriteGroup(
-      api.ApiFavoriteGroupType.Friend,
+    await addToFavoriteGroup(
+      ApiFavoriteGroupType.Friend,
       userIdRef.value,
       favoriteGroup.apiFavoriteGroup.name,
     );
@@ -449,7 +456,7 @@ async function removeFavorite() {
       return;
     }
 
-    await api.removeFromFavoriteGroup(userIdRef.value);
+    await removeFromFavoriteGroup(userIdRef.value);
   } catch (err) {
     console.error(err);
   }
@@ -458,7 +465,7 @@ async function removeFavorite() {
 export default {
   name: "UserPage",
   components: {
-    Location: VueLocation.default,
+    Location: VueLocation,
   },
   setup() {
     // let {params} = router.useRoute();
@@ -468,7 +475,7 @@ export default {
     // setUserId(userId);
 
     return {
-      friendFavoriteGroupList: api.friendFavoriteGroupList,
+      friendFavoriteGroupList: friendFavoriteGroupList,
       userId: userIdRef,
       worldInstance: worldInstanceRef,
       worldLink: worldLinkRef,

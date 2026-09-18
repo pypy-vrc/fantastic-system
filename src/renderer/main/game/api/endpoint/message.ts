@@ -1,34 +1,40 @@
-import * as pubsub from "../../../../../common/pubsub";
-import type { DateTimeString } from "../base";
-import { api, ApiRequestMethod } from "../internal";
-import { loginUser } from "./auth";
+import { subscribe } from "../../../../../common/pubsub.ts";
+import type { DateTimeString } from "../base.ts";
+import { api, ApiRequestMethod } from "../internal.ts";
+import { loginUser } from "./auth.ts";
 
-export const enum ApiMessageType {
-  Message = "message",
-  Response = "response",
-  Request = "request",
-  RequestResponse = "requestResponse",
-}
+export const ApiMessageType = {
+  Message: "message",
+  Response: "response",
+  Request: "request",
+  RequestResponse: "requestResponse",
+};
 
-export const enum ApiMessageReservedId {
-  Default = "default",
-}
+export type ApiMessageTypeValue =
+  (typeof ApiMessageType)[keyof typeof ApiMessageType];
 
-export interface ApiMessage {
+export const ApiMessageReservedId = {
+  Default: "default",
+};
+
+export type ApiMessageReservedIdValue =
+  (typeof ApiMessageReservedId)[keyof typeof ApiMessageReservedId];
+
+export type ApiMessage = {
   id?: string;
   slot?: number;
   message?: string;
-  messageType?: ApiMessageType;
+  messageType?: ApiMessageTypeValue;
   updatedAt?: DateTimeString;
   remainingCooldownMinutes?: number;
   canBeUpdated?: boolean;
-}
+};
 
-pubsub.subscribe("api:login", () => {
+subscribe("api:login", () => {
   //
 });
 
-export function fetchMessageList(type: ApiMessageType) {
+export function fetchMessageList(type: ApiMessageTypeValue) {
   return api<ApiMessage[]>({
     method: ApiRequestMethod.GET,
     path: `message/${loginUser.id}/${type}`,
@@ -36,7 +42,7 @@ export function fetchMessageList(type: ApiMessageType) {
 }
 
 export function setMessageInSlot(
-  type: ApiMessageType,
+  type: ApiMessageTypeValue,
   slot: number,
   message: string,
 ) {

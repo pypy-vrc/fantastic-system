@@ -3,7 +3,7 @@
     template(v-if="user")
         div
             img(:src="user.apiUser.iconUrl || user.apiUser.currentAvatarImageUrl"
-                :alt="user.apiUser.displayName ?? user.id"
+                :alt="user.apiUser.displayName || user.id"
                 style="width: 256px; height: 192px;")
         div username={{ user.apiUser.username }}
         div displayName={{ user.apiUser.displayName }}
@@ -54,7 +54,7 @@
             div(v-for="[instanceId, instance] of world.instances" :key="instanceId")
                 div #[location(:location="instanceId" :is-hide-world-name="true")]
                 div(v-for="user of instance.users" :key="user.id")
-                    div {{ user.apiUser.displayName ?? user.id }}
+                    div {{ user.apiUser.displayName || user.id }}
     div
         div(@click.prevent="removeFavorite") unfavorite
         div(v-for="(favoriteGroup, index) in friendFavoriteGroupList" :key="index" @click.prevent="addFavorite(favoriteGroup)")

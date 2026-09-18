@@ -1,34 +1,36 @@
-import * as noty from "noty";
-import * as util from "../../../../common/util";
-import type { ApiResponse } from "./base";
-import { ApiStatusCode } from "./base";
-import { ReservedLocation } from "./location";
-import * as sanitize from "./sanitize";
+import noty from "noty";
+import { escapeHtml, isEquals } from "../../../../common/util.ts";
+import { ApiStatusCode, type ApiResponse } from "./base.ts";
+import { ReservedLocation } from "./location.ts";
+import { replacePunctuation } from "./sanitize.ts";
 
-export const enum ApiRequestMethod {
-  GET = "GET",
-  POST = "POST",
-  PUT = "PUT",
-  DELETE = "DELETE",
-}
+export const ApiRequestMethod = {
+  GET: "GET",
+  POST: "POST",
+  PUT: "PUT",
+  DELETE: "DELETE",
+};
 
-export interface ApiRequestAuth {
+export type ApiRequestMethodValue =
+  (typeof ApiRequestMethod)[keyof typeof ApiRequestMethod];
+
+export type ApiRequestAuth = {
   username: string;
   password: string;
-}
+};
 
-export interface ApiReqeustQuery {
+export type ApiReqeustQuery = {
   [key: string]: string | number | undefined;
-}
+};
 
-export interface ApiRequest {
-  method: ApiRequestMethod;
+export type ApiRequest = {
+  method: ApiRequestMethodValue;
   path: string;
   auth?: ApiRequestAuth;
   query?: ApiReqeustQuery;
   body?: unknown;
   any?: boolean;
-}
+};
 
 export async function api<T>(request: ApiRequest): Promise<ApiResponse<T>> {
   try {
@@ -146,11 +148,11 @@ export async function api<T>(request: ApiRequest): Promise<ApiResponse<T>> {
         status,
         errorMessage,
       });
-      new noty.default({
+      new noty({
         type: "error",
         layout: "bottomRight",
         theme: "sunset",
-        text: `${util.escapeHtml(
+        text: `${escapeHtml(
           errorMessage,
         )}<br><span style="font-size: 11px;">${status} ${response.url}</span>`,
         timeout: 6000,
@@ -179,11 +181,11 @@ export function applyObject(target: object, source: object) {
 
     switch (key) {
       case "bio":
-        value = sanitize.replacePunctuation(String(value));
+        value = replacePunctuation(String(value));
         break;
 
       case "statusDescription":
-        value = sanitize.replacePunctuation(String(value)).slice(0, 32);
+        value = replacePunctuation(String(value)).slice(0, 32);
         break;
 
       case "location":
@@ -194,13 +196,15 @@ export function applyObject(target: object, source: object) {
 
       case "tags":
         if (Array.isArray(value)) {
-          value = [...new Set(value as [])].sort();
+          const v = [...new Set(value as [])];
+          v.sort();
+          value = v;
         }
         break;
     }
 
     const oldValue = target[key as keyof object] as unknown;
-    if (oldValue !== void 0 && util.isEquals(oldValue, value)) {
+    if (oldValue !== void 0 && isEquals(oldValue, value)) {
       continue;
     }
 
@@ -221,12 +225,12 @@ export function replaceObject(target: object, source: object) {
 
     switch (key) {
       case "bio":
-        value = sanitize.replacePunctuation(String(value));
+        value = replacePunctuation(String(value));
         break;
 
       case "statusDescription":
         // 얘는 slice 없음
-        value = sanitize.replacePunctuation(String(value));
+        value = replacePunctuation(String(value));
         break;
 
       case "location":
@@ -237,13 +241,15 @@ export function replaceObject(target: object, source: object) {
 
       case "tags":
         if (Array.isArray(value)) {
-          value = [...new Set(value as [])].sort();
+          const v = [...new Set(value as [])];
+          v.sort();
+          value = v;
         }
         break;
     }
 
     const oldValue = target[key as keyof object] as unknown;
-    if (oldValue !== void 0 && util.isEquals(oldValue, value)) {
+    if (oldValue !== void 0 && isEquals(oldValue, value)) {
       continue;
     }
 

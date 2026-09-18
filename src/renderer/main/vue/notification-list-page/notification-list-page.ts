@@ -1,9 +1,17 @@
-import * as vue from "vue";
-import * as api from "../../game/api";
-import * as VueNotificationListItem from "../notification-list-item/index.vue";
+import { computed } from "vue";
+import {
+  ApiPlatform,
+  clearAllNotification,
+  loginUser,
+  notificationMap,
+  refreshNotification,
+  sendInvite,
+  sendRequestInvite,
+} from "../../game/api/index.ts";
+import VueNotificationListItem from "../notification-list-item/index.vue";
 
-const notificationListRef = vue.computed(() => {
-  const array = [...api.notificationMap.values()];
+const notificationListRef = computed(() => {
+  const array = [...notificationMap.values()];
   array.sort((a, b) => b.time - a.time);
   return array;
 });
@@ -15,7 +23,7 @@ async function clearAll() {
       return;
     }
 
-    await api.clearAllNotification();
+    await clearAllNotification();
   } catch (err) {
     console.error(err);
   }
@@ -24,18 +32,17 @@ async function clearAll() {
 export default {
   name: "NotificationListPage",
   components: {
-    NotificationListItem: VueNotificationListItem.default,
+    NotificationListItem: VueNotificationListItem,
   },
   setup() {
     return {
       notificationList: notificationListRef,
-      refresh: api.refreshNotification,
+      refresh: refreshNotification,
       clearAll,
       async testInvite() {
         try {
           const location = "wrld_4432ea9b-729c-46e3-8eaf-846aa0a37fdd:0";
-
-          await api.sendInvite(api.loginUser.id, {
+          await sendInvite(loginUser.id, {
             instanceId: location,
             worldId: location,
             worldName: "",
@@ -46,8 +53,8 @@ export default {
       },
       async testRequestInvite() {
         try {
-          await api.sendRequestInvite(api.loginUser.id, {
-            platform: api.ApiPlatform.UnknownPlatform,
+          await sendRequestInvite(loginUser.id, {
+            platform: ApiPlatform.UnknownPlatform,
           });
         } catch (err) {
           console.error(err);

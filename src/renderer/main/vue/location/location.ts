@@ -1,14 +1,14 @@
-import * as vue from "vue";
-import * as api from "../../game/api";
-import { NetworkRegion } from "../../game/api";
-import { goWorldPage } from "../../router";
+import { computed } from "vue";
+import { parseLocation, worldMap } from "../../game/api/index.ts";
+import { NetworkRegion } from "../../game/api/index.ts";
+import { goWorldPage } from "../../router.ts";
 
-interface Props {
+type Props = {
   location: string;
   worldName?: string;
   clickable: boolean;
   isHideWorldName: boolean;
-}
+};
 
 export default {
   name: "Location",
@@ -28,25 +28,25 @@ export default {
     },
   },
   setup(props: Props) {
-    const locationInfoRef = vue.computed(() => {
+    const locationInfoRef = computed(() => {
       const location = props.location;
       // console.log('watch location', location);
-      return api.parseLocation(location);
+      return parseLocation(location);
     });
 
     return {
       locationInfo: locationInfoRef,
-      worldName: vue.computed(() => props.worldName),
-      isHideWorldName: vue.computed(() => props.isHideWorldName),
-      world: vue.computed(() => {
+      worldName: computed(() => props.worldName),
+      isHideWorldName: computed(() => props.isHideWorldName),
+      world: computed(() => {
         const { worldId } = locationInfoRef.value;
         if (worldId === void 0) {
           return;
         }
 
-        return api.worldMap.get(worldId);
+        return worldMap.get(worldId);
       }),
-      regionClass: vue.computed(() => {
+      regionClass: computed(() => {
         const { region } = locationInfoRef.value;
 
         if (region === NetworkRegion.Europe) {

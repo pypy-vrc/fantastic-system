@@ -1,19 +1,30 @@
-import * as vue from "vue";
-import * as noty from "noty";
-import * as util from "../../../../common/util";
-import * as api from "../../game/api";
-import { goUserPage } from "../../router";
-import * as loading from "../loading";
-import * as VueLocation from "../location/index.vue";
+import { computed } from "vue";
+import noty from "noty";
+import {
+  escapeHtml,
+  formatDate,
+  getDurationString,
+} from "../../../../common/util.ts";
+import {
+  ApiStatusCode,
+  fetchUserList,
+  fetchWorldInstanceShortName,
+  inviteMe,
+  parseLocation,
+  userMap,
+} from "../../game/api/index.ts";
+import { goUserPage } from "../../router.ts";
+import { decrementLoading, incrementLoading } from "../loading.ts";
+import VueLocation from "../location/index.vue";
 
 const { ipcRenderer } = window;
 
-interface Props {
+type Props = {
   gameLog: unknown[];
-}
+};
 
 async function clickUser(targetDisplayName: string) {
-  for (const user of api.userMap.values()) {
+  for (const user of userMap.values()) {
     if (user.apiUser.displayName === targetDisplayName) {
       goUserPage(user.id);
       return;
@@ -22,11 +33,11 @@ async function clickUser(targetDisplayName: string) {
 
   let isNotFound = true;
 
-  loading.increment();
+  incrementLoading();
 
   try {
-    const { status, data } = await api.fetchUserList(targetDisplayName, 50, 0);
-    if (status === api.ApiStatusCode.OK && data !== void 0) {
+    const { status, data } = await fetchUserList(targetDisplayName, 50, 0);
+    if (status === ApiStatusCode.OK && data !== void 0) {
       for (const apiUser of data) {
         const { id, displayName } = apiUser;
         if (id === void 0 || displayName === void 0) {
@@ -44,14 +55,14 @@ async function clickUser(targetDisplayName: string) {
     console.error(err);
   }
 
-  loading.decrement();
+  decrementLoading();
 
   if (isNotFound) {
-    new noty.default({
+    new noty({
       type: "error",
       layout: "bottomRight",
       theme: "sunset",
-      text: `User ${util.escapeHtml(targetDisplayName)} not found`,
+      text: `User ${escapeHtml(targetDisplayName)} not found`,
       timeout: 5000,
     }).show();
   }
@@ -59,7 +70,7 @@ async function clickUser(targetDisplayName: string) {
 
 async function sendInviteMe(location: string, worldName: string) {
   try {
-    const locationInfo = api.parseLocation(location);
+    const locationInfo = parseLocation(location);
     if (locationInfo.instanceId === void 0) {
       return;
     }
@@ -69,7 +80,7 @@ async function sendInviteMe(location: string, worldName: string) {
       return;
     }
 
-    await api.inviteMe(location);
+    await inviteMe(location);
   } catch (err) {
     console.error(err);
   }
@@ -77,7 +88,7 @@ async function sendInviteMe(location: string, worldName: string) {
 
 async function playGame(location: string, worldName: string) {
   try {
-    const locationInfo = api.parseLocation(location);
+    const locationInfo = parseLocation(location);
     if (locationInfo.instanceId === void 0) {
       return;
     }
@@ -87,12 +98,12 @@ async function playGame(location: string, worldName: string) {
       return;
     }
 
-    const response = await api.fetchWorldInstanceShortName(location);
+    const response = await fetchWorldInstanceShortName(location);
 
     await ipcRenderer.invoke(
       "native:playGame",
       `vrchat://launch?id=${location}&shortName=${
-        response.data?.secureName ?? ""
+        response.data?.secureName || ""
       }`,
     );
   } catch (err) {
@@ -106,10 +117,10 @@ export default {
     gameLog: Array,
   },
   components: {
-    Location: VueLocation.default,
+    Location: VueLocation,
   },
   setup(props: Props) {
-    const gameLogRef = vue.computed(() => props.gameLog);
+    const gameLogRef = computed(() => props.gameLog);
     // let userRef = vue.computed(() => props.user);
 
     return {
@@ -123,8 +134,8 @@ export default {
       //     }
       //     return api.worldMap.get(worldId);
       // }),
-      formatDate: util.formatDate,
-      getDurationString: util.getDurationString,
+      formatDate: formatDate,
+      getDurationString: getDurationString,
       goUserPage,
       clickUser,
       sendInviteMe,

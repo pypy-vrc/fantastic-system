@@ -1,10 +1,10 @@
-import * as vue from "vue";
-import * as pubsub from "../../../../../common/pubsub";
-import { ApiStatusCode } from "../base";
-import { api, ApiRequestMethod } from "../internal";
-import { loginUser } from "./auth";
-import { syncFavoriteAvatar } from "./avatar";
-import { syncFavoriteWorld } from "./world";
+import { reactive } from "vue";
+import { subscribe } from "../../../../../common/pubsub.ts";
+import { ApiStatusCode } from "../base.ts";
+import { api, ApiRequestMethod } from "../internal.ts";
+import { loginUser } from "./auth.ts";
+import { syncFavoriteAvatar } from "./avatar.ts";
+import { syncFavoriteWorld } from "./world.ts";
 
 // public const int MAX_GROUP_NAME_LENGTH = 24;
 // public const int MAX_WORLDS_IN_GROUP = 32;
@@ -15,62 +15,71 @@ import { syncFavoriteWorld } from "./world";
 // public const int MIN_FAVORITE_AVATAR_GROUPS = 1;
 // public const int MAX_FAVORITE_AVATAR_GROUPS = 4;
 
-export const enum ApiFavoriteGroupType {
-  Undefiend = "undefined",
-  Friend = "friend",
-  World = "world",
-  Avatar = "avatar",
-}
+export const ApiFavoriteGroupType = {
+  Undefiend: "undefined",
+  Friend: "friend",
+  World: "world",
+  Avatar: "avatar",
+};
 
-export interface ApiFavorite {
+export type ApiFavoriteGroupTypeValue =
+  (typeof ApiFavoriteGroupType)[keyof typeof ApiFavoriteGroupType];
+
+export type ApiFavorite = {
   id?: string;
-  type?: ApiFavoriteGroupType;
+  type?: ApiFavoriteGroupTypeValue;
   favoriteId?: string;
   tags?: string[];
-}
+};
 
-export const enum ApiFavoriteGroupVisibility {
-  Public = "public",
-  Friends = "friends",
-  Private = "private",
-}
+export const ApiFavoriteGroupVisibility = {
+  Public: "public",
+  Friends: "friends",
+  Private: "private",
+};
 
-export interface ApiFavoriteGroup {
+export type ApiFavoriteGroupVisibilityValue =
+  (typeof ApiFavoriteGroupVisibility)[keyof typeof ApiFavoriteGroupVisibility];
+
+export type ApiFavoriteGroup = {
   id?: string;
   ownerId?: string;
   ownerDisplayName?: string;
   name?: string;
   displayName?: string;
-  type?: ApiFavoriteGroupType;
-  visibility?: ApiFavoriteGroupVisibility;
+  type?: ApiFavoriteGroupTypeValue;
+  visibility?: ApiFavoriteGroupVisibilityValue;
   tags?: string[];
-}
+};
 
-export interface Favorite {
+export type Favorite = {
   objectId: string;
   apiFavorite: ApiFavorite;
   favoriteGroup?: FavoriteGroup;
-}
+};
 
-export interface FavoriteGroup {
-  type: ApiFavoriteGroupType;
+export type FavoriteGroup = {
+  type: ApiFavoriteGroupTypeValue;
   capacity: number;
   favoriteMap: Map<string, Favorite>;
   apiFavoriteGroup: ApiFavoriteGroup;
-}
+};
 
 /** {[objectKey: string]: Favorite} */
-export const favoriteMap = vue.reactive(new Map<string, Favorite>());
-export const friendFavoriteGroupList = vue.reactive([] as FavoriteGroup[]);
-export const worldFavoriteGroupList = vue.reactive([] as FavoriteGroup[]);
-export const avatarFavoriteGroupList = vue.reactive([] as FavoriteGroup[]);
+export const favoriteMap = reactive(new Map<string, Favorite>());
+export const friendFavoriteGroupList = reactive([] as FavoriteGroup[]);
+export const worldFavoriteGroupList = reactive([] as FavoriteGroup[]);
+export const avatarFavoriteGroupList = reactive([] as FavoriteGroup[]);
 
-pubsub.subscribe("api:login", () => {
+subscribe("api:login", () => {
   favoriteMap.clear();
   resetFavoriteGroup();
 });
 
-export function getFavoriteGroup(type: ApiFavoriteGroupType, name: string) {
+export function getFavoriteGroup(
+  type: ApiFavoriteGroupTypeValue,
+  name: string,
+) {
   let favoriteGroupList: FavoriteGroup[] | undefined = void 0;
 
   switch (type) {
@@ -106,7 +115,7 @@ function applyFavorite(apiFavorite: ApiFavorite) {
 
   let favorite = favoriteMap.get(favoriteId);
   if (favorite === void 0) {
-    favorite = vue.reactive<Favorite>({
+    favorite = reactive<Favorite>({
       objectId: favoriteId,
       apiFavorite: {},
       favoriteGroup: void 0,
@@ -115,7 +124,7 @@ function applyFavorite(apiFavorite: ApiFavorite) {
     favoriteMap.set(favoriteId, favorite);
   }
 
-  favorite.apiFavorite = vue.reactive(apiFavorite);
+  favorite.apiFavorite = reactive(apiFavorite);
   favorite.favoriteGroup = void 0;
 
   const name = tags[0] as string | undefined;
@@ -154,7 +163,7 @@ export function fetchFavoriteGroupList(ownerId?: string) {
 }
 
 export async function clearFavoriteGroup(
-  type: ApiFavoriteGroupType,
+  type: ApiFavoriteGroupTypeValue,
   name: string,
 ) {
   const response = await api<ApiFavoriteGroup>({
@@ -178,7 +187,7 @@ export async function clearFavoriteGroup(
 }
 
 export async function addToFavoriteGroup(
-  type: ApiFavoriteGroupType,
+  type: ApiFavoriteGroupTypeValue,
   objectId: string,
   tags?: string,
 ) {
@@ -243,16 +252,16 @@ function resetFavoriteGroup() {
     [ApiFavoriteGroupType.Avatar, "avatars5", "VRC+ Group 4", 50],
     [ApiFavoriteGroupType.Avatar, "avatars6", "VRC+ Group 5", 50],
   ] as [
-    type: ApiFavoriteGroupType,
+    type: ApiFavoriteGroupTypeValue,
     name: string,
     displayName: string,
     capacity: number,
   ][]) {
-    const favoriteGroup = vue.reactive<FavoriteGroup>({
+    const favoriteGroup = reactive<FavoriteGroup>({
       type,
       capacity,
-      favoriteMap: vue.reactive(new Map<string, Favorite>()),
-      apiFavoriteGroup: vue.reactive({
+      favoriteMap: reactive(new Map<string, Favorite>()),
+      apiFavoriteGroup: reactive({
         id: void 0,
         ownerDisplayName: void 0,
         name,
@@ -302,7 +311,7 @@ async function syncFavoriteGroup() {
         favoriteGroup.type === apiFavoriteGroup.type &&
         favoriteGroup.apiFavoriteGroup.name === apiFavoriteGroup.name
       ) {
-        favoriteGroup.apiFavoriteGroup = vue.reactive(apiFavoriteGroup);
+        favoriteGroup.apiFavoriteGroup = reactive(apiFavoriteGroup);
         continue L1;
       }
     }
@@ -316,7 +325,7 @@ async function syncFavoriteGroup() {
         favoriteGroup.type === apiFavoriteGroup.type &&
         favoriteGroup.apiFavoriteGroup.id === void 0
       ) {
-        favoriteGroup.apiFavoriteGroup = vue.reactive(apiFavoriteGroup);
+        favoriteGroup.apiFavoriteGroup = reactive(apiFavoriteGroup);
         continue L2;
       }
     }

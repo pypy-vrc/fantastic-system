@@ -1,79 +1,79 @@
-import * as vueRouter from "vue-router";
-import * as util from "../../common/util";
-import * as pubsub from "../../common/pubsub";
-import * as VueLoginUserPage from "./vue/login-user-page/index.vue";
-import * as VueGameLogListPage from "./vue/game-log-list-page/index.vue";
-import * as VueFavoriteListPage from "./vue/favorite-list-page/index.vue";
-import * as VueFriendListPage from "./vue/friend-list-page/index.vue";
-import * as VueNotificationListPage from "./vue/notification-list-page/index.vue";
-import * as VuePlayerModerationListPage from "./vue/player-moderation-list-page/index.vue";
-import * as VueSearchPage from "./vue/search-page/index.vue";
-import * as VueSettingPage from "./vue/setting-page/index.vue";
-import * as VueUserPage from "./vue/user-page/index.vue";
-import * as VueWorldPage from "./vue/world-page/index.vue";
-import * as VueAvatarPage from "./vue/avatar-page/index.vue";
+import { createRouter, createWebHashHistory, useRoute } from "vue-router";
+import { nop } from "../../common/util.ts";
+import { publish } from "../../common/pubsub.ts";
+import VueLoginUserPage from "./vue/login-user-page/index.vue";
+import VueGameLogListPage from "./vue/game-log-list-page/index.vue";
+import VueFavoriteListPage from "./vue/favorite-list-page/index.vue";
+import VueFriendListPage from "./vue/friend-list-page/index.vue";
+import VueNotificationListPage from "./vue/notification-list-page/index.vue";
+import VuePlayerModerationListPage from "./vue/player-moderation-list-page/index.vue";
+import VueSearchPage from "./vue/search-page/index.vue";
+import VueSettingPage from "./vue/setting-page/index.vue";
+import VueUserPage from "./vue/user-page/index.vue";
+import VueWorldPage from "./vue/world-page/index.vue";
+import VueAvatarPage from "./vue/avatar-page/index.vue";
 
-export const { useRoute } = vueRouter;
+export { useRoute };
 
-const history = vueRouter.createWebHashHistory();
+const history = createWebHashHistory();
 
-export const router = vueRouter.createRouter({
+export const router = createRouter({
   history,
   routes: [
     {
       path: "/",
       name: "login-user-page",
-      component: VueLoginUserPage.default,
+      component: VueLoginUserPage,
     },
     {
       path: "/game-logs",
       name: "game-log-list-page",
-      component: VueGameLogListPage.default,
+      component: VueGameLogListPage,
     },
     {
       path: "/favorites",
       name: "favorite-list-page",
-      component: VueFavoriteListPage.default,
+      component: VueFavoriteListPage,
     },
     {
       path: "/friends",
       name: "friend-list-page",
-      component: VueFriendListPage.default,
+      component: VueFriendListPage,
     },
     {
       path: "/notifications",
       name: "notification-list-page",
-      component: VueNotificationListPage.default,
+      component: VueNotificationListPage,
     },
     {
       path: "/player-moderations",
       name: "player-moderation-list-page",
-      component: VuePlayerModerationListPage.default,
+      component: VuePlayerModerationListPage,
     },
     {
       path: "/search",
       name: "search-page",
-      component: VueSearchPage.default,
+      component: VueSearchPage,
     },
     {
       path: "/setting",
       name: "setting-page",
-      component: VueSettingPage.default,
+      component: VueSettingPage,
     },
     {
       path: "/users/:id",
       name: "user-page",
-      component: VueUserPage.default,
+      component: VueUserPage,
     },
     {
       path: "/worlds/:id",
       name: "world-page",
-      component: VueWorldPage.default,
+      component: VueWorldPage,
     },
     {
       path: "/avatars/:id",
       name: "avatar-page",
-      component: VueAvatarPage.default,
+      component: VueAvatarPage,
     },
   ],
   scrollBehavior(to, from) {
@@ -96,12 +96,12 @@ export const router = vueRouter.createRouter({
 router.afterEach((to, from, failure) => {
   const position = Number(history.state.position);
 
-  pubsub.publish("router:button-state", {
+  publish("router:button-state", {
     back: position > 0,
     forward: window.history.length > position + 1,
   });
 
-  pubsub.publish("router:after-each", to, from, failure);
+  publish("router:after-each", to, from, failure);
 });
 
 export function goUserPage(userId: string) {
@@ -112,7 +112,7 @@ export function goUserPage(userId: string) {
         id: userId,
       },
     })
-    .catch(util.nop);
+    .catch(nop);
 }
 
 export function goWorldPage(worldId: string) {
@@ -123,7 +123,7 @@ export function goWorldPage(worldId: string) {
         id: worldId,
       },
     })
-    .catch(util.nop);
+    .catch(nop);
 }
 
 export function goAvatarPage(avatarId: string) {
@@ -134,5 +134,5 @@ export function goAvatarPage(avatarId: string) {
         id: avatarId,
       },
     })
-    .catch(util.nop);
+    .catch(nop);
 }

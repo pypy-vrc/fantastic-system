@@ -1,21 +1,26 @@
-import * as vue from "vue";
-import * as util from "../../../../common/util";
-import * as pubsub from "../../../../common/pubsub";
-import { goUserPage, router } from "../../router";
-import * as api from "../../game/api";
-import * as loading from "../loading";
+import { reactive, ref, watch } from "vue";
+import { nop, throttle } from "../../../../common/util.ts";
+import { subscribe } from "../../../../common/pubsub.ts";
+import { goUserPage, router } from "../../router.ts";
+import {
+  fetchLoginUser,
+  isLoggedIn,
+  loginUser,
+  logout,
+} from "../../game/api/index.ts";
+import { decrementLoading, incrementLoading } from "../loading.ts";
 
 const { ipcRenderer } = window;
 
-const routeButtonState = vue.reactive({
+const routeButtonState = reactive({
   back: false,
   forward: false,
 });
 
-const currentMenuRef = vue.ref("game-log-list-page");
-const notifyMenuSet = vue.reactive(new Set<string>());
+const currentMenuRef = ref("game-log-list-page");
+const notifyMenuSet = reactive(new Set<string>());
 
-pubsub.subscribe("router:button-state", (state: typeof routeButtonState) => {
+subscribe("router:button-state", (state: typeof routeButtonState) => {
   routeButtonState.back = state.back;
   routeButtonState.forward = state.forward;
 });
@@ -41,17 +46,17 @@ function selectMenu(menu: string) {
     .push({
       name: menu,
     })
-    .catch(util.nop);
+    .catch(nop);
 }
 
 function notifyMenu(menu: string) {
   notifyMenuSet.add(menu);
 }
 
-pubsub.subscribe("app:notify-menu", notifyMenu);
+subscribe("app:notify-menu", notifyMenu);
 
-vue.watch(api.isLoggedIn, (isLoggedIn) => {
-  if (!isLoggedIn) {
+watch(isLoggedIn, (_isLoggedIn) => {
+  if (!_isLoggedIn) {
     selectMenu("login-user-page");
   }
 });
@@ -80,19 +85,19 @@ async function onLoginUserMenuCommand(command: string) {
   try {
     switch (command) {
       case "myInfo":
-        goUserPage(api.loginUser.id);
+        goUserPage(loginUser.id);
         break;
 
       case "logout":
-        loading.increment();
+        incrementLoading();
 
         try {
-          await api.logout();
+          await logout();
         } catch (err) {
           console.error(err);
         }
 
-        loading.decrement();
+        decrementLoading();
         break;
     }
   } catch (err) {
@@ -112,7 +117,7 @@ function maximize() {
   ipcRenderer.send("main:maximize");
 }
 
-const handleViewScroll = util.throttle((e: Event) => {
+const handleViewScroll = throttle((e: Event) => {
   const el = e.target as HTMLElement | null;
   if (el === null) {
     return;
@@ -131,23 +136,21 @@ const handleViewScroll = util.throttle((e: Event) => {
 export default {
   name: "App",
   setup() {
-    setTimeout(() => {
-      (async function sex() {
-        loading.increment();
+    setTimeout(async () => {
+      incrementLoading();
 
-        try {
-          await api.fetchLoginUser();
-        } catch (err) {
-          console.error(err);
-        }
+      try {
+        await fetchLoginUser();
+      } catch (err) {
+        console.error(err);
+      }
 
-        loading.decrement();
-      })();
+      decrementLoading();
     }, 69);
 
     return {
-      isLoggedIn: api.isLoggedIn,
-      loginUser: api.loginUser,
+      isLoggedIn: isLoggedIn,
+      loginUser: loginUser,
       routeButtonState,
       currentMenu: currentMenuRef,
       notifyMenuSet,

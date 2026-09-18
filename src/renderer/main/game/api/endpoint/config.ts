@@ -1,16 +1,16 @@
-import * as vue from "vue";
-import { ApiStatusCode } from "../base";
-import { api, ApiRequestMethod } from "../internal";
+import { reactive } from "vue";
+import { ApiStatusCode } from "../base.ts";
+import { api, ApiRequestMethod } from "../internal.ts";
 
-export interface ApiConfig {
+export type ApiConfig = {
   clientApiKey?: string;
-}
+};
 
-export interface Config {
+export type Config = {
   apiConfig: ApiConfig;
-}
+};
 
-export const config = vue.reactive<Config>({
+export const config = reactive<Config>({
   apiConfig: {},
 });
 
@@ -22,7 +22,7 @@ export async function fetchConfig() {
 
   const { status, data: apiConfig } = response;
   if (status === ApiStatusCode.OK && apiConfig !== void 0) {
-    config.apiConfig = vue.reactive(apiConfig);
+    config.apiConfig = reactive(apiConfig);
   }
 
   return response;

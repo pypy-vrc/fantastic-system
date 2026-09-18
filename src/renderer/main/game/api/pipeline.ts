@@ -1,50 +1,53 @@
-import * as noty from "noty";
-import * as util from "../../../../common/util";
-import * as pubsub from "../../../../common/pubsub";
-import type { DateTimeString } from "./base";
+import noty from "noty";
+import { escapeHtml, nop } from "../../../../common/util.ts";
+import { publish, subscribe } from "../../../../common/pubsub.ts";
 import {
   ApiStatusCode,
   isLoggedIn,
   lazyFetchUserIdSet,
   setFetchUserTimer,
-} from "./base";
-import { applyObject } from "./internal";
-import type { ApiLoginUser } from "./endpoint/auth";
-import { loginUser, fetchAuthToken } from "./endpoint/auth";
-import type { ApiNotification } from "./endpoint/notification";
+  type DateTimeString,
+} from "./base.ts";
+import { applyObject } from "./internal.ts";
+import {
+  loginUser,
+  fetchAuthToken,
+  type ApiLoginUser,
+} from "./endpoint/auth.ts";
 import {
   ApiNotificationType,
   applyNotification,
   clearFriendRequest,
   notificationMap,
-} from "./endpoint/notification";
-import type { ApiUser } from "./endpoint/user";
+  type ApiNotification,
+  type ApiNotificationTypeValue,
+} from "./endpoint/notification.ts";
 import {
   ApiUserState,
   applyUser,
   fetchFriendStatus,
   userMap,
-} from "./endpoint/user";
-import type { ApiWorld } from "./endpoint/world";
-import { applyWorld } from "./endpoint/world";
+  type ApiUser,
+} from "./endpoint/user.ts";
+import { applyWorld, type ApiWorld } from "./endpoint/world.ts";
 
 let socket: WebSocket | undefined = void 0;
 let socketUserId: string | undefined = void 0;
 
-pubsub.subscribe("api:logout", () => {
+subscribe("api:logout", () => {
   closeSocket();
 });
 
-pubsub.subscribe("pipeline:clear-notification", () => {
+subscribe("pipeline:clear-notification", () => {
   notificationMap.clear();
 });
 
-interface PipelineNotificationV2Delete {
+type PipelineNotificationV2Delete = {
   ids: string[];
   version: number;
-}
+};
 
-pubsub.subscribe(
+subscribe(
   "pipeline:notification-v2-delete",
   ({ ids }: PipelineNotificationV2Delete) => {
     for (const id of ids) {
@@ -53,7 +56,7 @@ pubsub.subscribe(
   },
 );
 
-interface PipelineFriendActive {
+type PipelineFriendActive = {
   userId: string;
   user: ApiUser;
   // userId: string;
@@ -80,9 +83,9 @@ interface PipelineFriendActive {
   //   friendKey: string;
   //   last_activity: string;
   // };
-}
+};
 
-pubsub.subscribe(
+subscribe(
   "pipeline:friend-active",
   ({ userId, user }: PipelineFriendActive) => {
     setFetchUserTimer(userId, 30 * 1000); // 30s
@@ -93,7 +96,7 @@ pubsub.subscribe(
   },
 );
 
-interface PipelineFriendAdd {
+type PipelineFriendAdd = {
   userId: string;
   user: ApiUser;
   // userId: string;
@@ -120,32 +123,26 @@ interface PipelineFriendAdd {
   //   friendKey: string;
   //   last_activity: string;
   // };
-}
+};
 
-pubsub.subscribe(
-  "pipeline:friend-add",
-  ({ userId, user }: PipelineFriendAdd) => {
-    delete user.state; // always offline
+subscribe("pipeline:friend-add", ({ userId, user }: PipelineFriendAdd) => {
+  delete user.state; // always offline
 
-    applyUser(user);
+  applyUser(user);
 
-    fetchFriendStatus(userId).catch(util.nop);
-    lazyFetchUserIdSet.add(userId);
-  },
-);
+  fetchFriendStatus(userId).catch(nop);
+  lazyFetchUserIdSet.add(userId);
+});
 
-interface PipelineFriendDelete {
+type PipelineFriendDelete = {
   userId: string;
-}
+};
 
-pubsub.subscribe(
-  "pipeline:friend-delete",
-  ({ userId }: PipelineFriendDelete) => {
-    lazyFetchUserIdSet.add(userId);
-  },
-);
+subscribe("pipeline:friend-delete", ({ userId }: PipelineFriendDelete) => {
+  lazyFetchUserIdSet.add(userId);
+});
 
-interface PipelineFriendLocation {
+type PipelineFriendLocation = {
   userId: string;
   user: ApiUser;
   location: string;
@@ -221,9 +218,9 @@ interface PipelineFriendLocation {
   //   heat: number;
   // };
   // canRequestInvite: boolean;
-}
+};
 
-pubsub.subscribe(
+subscribe(
   "pipeline:friend-location",
   ({ user, location, world }: PipelineFriendLocation) => {
     if (world !== void 0) {
@@ -237,28 +234,25 @@ pubsub.subscribe(
   },
 );
 
-interface PipelineFriendOffline {
+type PipelineFriendOffline = {
   userId: string;
-}
+};
 
-pubsub.subscribe(
-  "pipeline:friend-offline",
-  ({ userId }: PipelineFriendOffline) => {
-    setFetchUserTimer(userId, 120 * 1000); // 2m
+subscribe("pipeline:friend-offline", ({ userId }: PipelineFriendOffline) => {
+  setFetchUserTimer(userId, 120 * 1000); // 2m
 
-    const user = userMap.get(userId);
-    if (user === void 0) {
-      return;
-    }
+  const user = userMap.get(userId);
+  if (user === void 0) {
+    return;
+  }
 
-    applyUser({
-      id: userId,
-      state: ApiUserState.Offline,
-    });
-  },
-);
+  applyUser({
+    id: userId,
+    state: ApiUserState.Offline,
+  });
+});
 
-interface PipelineFriendOnline {
+type PipelineFriendOnline = {
   userId: string;
   user: ApiUser;
   location: string;
@@ -291,9 +285,9 @@ interface PipelineFriendOnline {
   // travelingToLocation: string;
   // world: Record<string, never>;
   // canRequestInvite: boolean;
-}
+};
 
-pubsub.subscribe(
+subscribe(
   "pipeline:friend-online",
   ({ user, location, world }: PipelineFriendOnline) => {
     if (world !== void 0) {
@@ -307,7 +301,7 @@ pubsub.subscribe(
   },
 );
 
-interface PipelineFriendUpdate {
+type PipelineFriendUpdate = {
   userId: string;
   user: ApiUser;
   // userId: string;
@@ -334,29 +328,29 @@ interface PipelineFriendUpdate {
   //   friendKey: string;
   //   last_activity: string;
   // };
-}
+};
 
-pubsub.subscribe("pipeline:friend-update", ({ user }: PipelineFriendUpdate) => {
+subscribe("pipeline:friend-update", ({ user }: PipelineFriendUpdate) => {
   delete user.state; // always offline
 
   applyUser(user);
 });
 
-pubsub.subscribe("pipeline:hide-notification", (notificationId: string) => {
+subscribe("pipeline:hide-notification", (notificationId: string) => {
   clearFriendRequest(notificationId);
 });
 
-interface PipelineNotification {
+type PipelineNotification = {
   id: string;
-  type: ApiNotificationType;
+  type: ApiNotificationTypeValue;
   senderUserId: string;
   senderUsername: string;
   receiverUserId: string;
   details: Record<string, unknown>;
   created_at: DateTimeString;
-}
+};
 
-pubsub.subscribe("pipeline:notification", (data: PipelineNotification) => {
+subscribe("pipeline:notification", (data: PipelineNotification) => {
   applyNotification(data as ApiNotification);
 
   if (data.type === ApiNotificationType.FriendRequest) {
@@ -366,21 +360,21 @@ pubsub.subscribe("pipeline:notification", (data: PipelineNotification) => {
     }
   }
 
-  pubsub.publish("app:notify-menu", "notification-list-page");
+  publish("app:notify-menu", "notification-list-page");
 });
 
-pubsub.subscribe("pipeline:see-notification", (notificationId: string) => {
+subscribe("pipeline:see-notification", (notificationId: string) => {
   //
 });
 
-interface PipelineUserLocation {
+type PipelineUserLocation = {
   userId: string;
   location: string;
   intance: string;
   world: ApiWorld;
-}
+};
 
-pubsub.subscribe(
+subscribe(
   "pipeline:user-location",
   ({ userId, location, world }: PipelineUserLocation) => {
     if (world !== void 0) {
@@ -398,12 +392,12 @@ pubsub.subscribe(
   },
 );
 
-interface PipelineUserUpdate {
+type PipelineUserUpdate = {
   userId: string;
   user: ApiLoginUser;
-}
+};
 
-pubsub.subscribe("pipeline:user-update", ({ user }: PipelineUserUpdate) => {
+subscribe("pipeline:user-update", ({ user }: PipelineUserUpdate) => {
   if (user.id !== loginUser.id) {
     return;
   }
@@ -427,7 +421,7 @@ function closeSocket() {
   }
 
   console.log("pipeline:close");
-  pubsub.publish("pipeline:close");
+  publish("pipeline:close");
 }
 
 function onSocketError(this: WebSocket) {
@@ -455,7 +449,7 @@ function onSocketOpen(this: WebSocket) {
   }
 
   console.log("pipeline:open");
-  pubsub.publish("pipeline:open");
+  publish("pipeline:open");
 }
 
 function onSocketMessage(this: WebSocket, event: MessageEvent) {
@@ -470,11 +464,11 @@ function onSocketMessage(this: WebSocket, event: MessageEvent) {
     if (data.err !== void 0) {
       console.log("pipeline:data", data);
 
-      new noty.default({
+      new noty({
         type: "error",
         layout: "bottomRight",
         theme: "sunset",
-        text: util.escapeHtml(data.err),
+        text: escapeHtml(data.err),
         timeout: 6000,
         queue: "api",
       }).show();
@@ -487,13 +481,13 @@ function onSocketMessage(this: WebSocket, event: MessageEvent) {
 
     switch (data.type) {
       case "clear-notification":
-        pubsub.publish("pipeline:clear-notification");
+        publish("pipeline:clear-notification");
         break;
 
       case "friend-active": {
         const content = JSON.parse(data.content);
         if (content === Object(content)) {
-          pubsub.publish("pipeline:friend-active", content);
+          publish("pipeline:friend-active", content);
         }
         break;
       }
@@ -501,7 +495,7 @@ function onSocketMessage(this: WebSocket, event: MessageEvent) {
       case "friend-add": {
         const content = JSON.parse(data.content);
         if (content === Object(content)) {
-          pubsub.publish("pipeline:friend-add", content);
+          publish("pipeline:friend-add", content);
         }
         break;
       }
@@ -509,7 +503,7 @@ function onSocketMessage(this: WebSocket, event: MessageEvent) {
       case "friend-delete": {
         const content = JSON.parse(data.content);
         if (content === Object(content)) {
-          pubsub.publish("pipeline:friend-delete", content);
+          publish("pipeline:friend-delete", content);
         }
         break;
       }
@@ -517,7 +511,7 @@ function onSocketMessage(this: WebSocket, event: MessageEvent) {
       case "friend-location": {
         const content = JSON.parse(data.content);
         if (content === Object(content)) {
-          pubsub.publish("pipeline:friend-location", content);
+          publish("pipeline:friend-location", content);
         }
         break;
       }
@@ -525,7 +519,7 @@ function onSocketMessage(this: WebSocket, event: MessageEvent) {
       case "friend-offline": {
         const content = JSON.parse(data.content);
         if (content === Object(content)) {
-          pubsub.publish("pipeline:friend-offline", content);
+          publish("pipeline:friend-offline", content);
         }
         break;
       }
@@ -533,7 +527,7 @@ function onSocketMessage(this: WebSocket, event: MessageEvent) {
       case "friend-online": {
         const content = JSON.parse(data.content);
         if (content === Object(content)) {
-          pubsub.publish("pipeline:friend-online", content);
+          publish("pipeline:friend-online", content);
         }
         break;
       }
@@ -541,7 +535,7 @@ function onSocketMessage(this: WebSocket, event: MessageEvent) {
       case "friend-update": {
         const content = JSON.parse(data.content);
         if (content === Object(content)) {
-          pubsub.publish("pipeline:friend-update", content);
+          publish("pipeline:friend-update", content);
         }
         break;
       }
@@ -549,7 +543,7 @@ function onSocketMessage(this: WebSocket, event: MessageEvent) {
       case "hide-notification": {
         const { content } = data;
         if (typeof content === "string") {
-          pubsub.publish("pipeline:hide-notification", content);
+          publish("pipeline:hide-notification", content);
         }
         break;
       }
@@ -557,7 +551,7 @@ function onSocketMessage(this: WebSocket, event: MessageEvent) {
       case "notification": {
         const content = JSON.parse(data.content);
         if (content === Object(content)) {
-          pubsub.publish("pipeline:notification", content);
+          publish("pipeline:notification", content);
         }
         break;
       }
@@ -565,7 +559,7 @@ function onSocketMessage(this: WebSocket, event: MessageEvent) {
       case "notification-v2-delete": {
         const content = JSON.parse(data.content);
         if (content === Object(content)) {
-          pubsub.publish("pipeline:notification-v2-delete", content);
+          publish("pipeline:notification-v2-delete", content);
         }
         break;
       }
@@ -573,7 +567,7 @@ function onSocketMessage(this: WebSocket, event: MessageEvent) {
       case "see-notification": {
         const { content } = data;
         if (typeof content === "string") {
-          pubsub.publish("pipeline:see-notification", content);
+          publish("pipeline:see-notification", content);
         }
         break;
       }
@@ -581,7 +575,7 @@ function onSocketMessage(this: WebSocket, event: MessageEvent) {
       case "user-location": {
         const content = JSON.parse(data.content);
         if (content === Object(content)) {
-          pubsub.publish("pipeline:user-location", content);
+          publish("pipeline:user-location", content);
         }
         break;
       }
@@ -589,7 +583,7 @@ function onSocketMessage(this: WebSocket, event: MessageEvent) {
       case "user-update": {
         const content = JSON.parse(data.content);
         if (content === Object(content)) {
-          pubsub.publish("pipeline:user-update", content);
+          publish("pipeline:user-update", content);
         }
         break;
       }
@@ -625,10 +619,10 @@ export async function checkWebSocket() {
     }
 
     socket = new WebSocket(`wss://pipeline.vrchat.cloud/?auth=${data.token}`);
-    socket.onerror = onSocketError;
-    socket.onclose = onSocketClose;
-    socket.onopen = onSocketOpen;
-    socket.onmessage = onSocketMessage;
+    socket.addEventListener("error", onSocketError);
+    socket.addEventListener("close", onSocketClose);
+    socket.addEventListener("open", onSocketOpen);
+    socket.addEventListener("message", onSocketMessage);
   } catch (err) {
     console.error(err);
   }

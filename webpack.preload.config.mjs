@@ -1,12 +1,12 @@
-const TerserPlugin = require("terser-webpack-plugin");
-const ForkTsCheckerWebpackPlugin = require("fork-ts-checker-webpack-plugin");
+import TerserPlugin from "terser-webpack-plugin";
+import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
 
-module.exports = {
+export default {
   entry: {
     preload: "./src/preload/index.ts",
   },
   output: {
-    filename: "[name].js",
+    filename: "[name].cjs",
     library: {
       type: "window",
     },

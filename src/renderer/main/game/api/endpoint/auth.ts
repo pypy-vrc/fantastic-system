@@ -1,26 +1,28 @@
-import * as vue from "vue";
-import * as pubsub from "../../../../../common/pubsub";
+import { reactive } from "vue";
+import { publish, subscribe } from "../../../../../common/pubsub.ts";
+import {
+  ApiStatusCode,
+  isLoggedIn,
+  lazyFetchUserIdSet,
+  type ApiPlatformValue,
+  type ApiResponse,
+  type ApiSuccess,
+  type DateTimeString,
+} from "../base.ts";
+import { api, ApiRequestMethod } from "../internal.ts";
 import type {
-  ApiPlatform,
-  ApiResponse,
-  ApiSuccess,
-  DateTimeString,
-} from "../base";
-import { ApiStatusCode, isLoggedIn, lazyFetchUserIdSet } from "../base";
-import { api, ApiRequestMethod } from "../internal";
-import type {
+  ApiUserStatusValue,
+  ApiUserStateValue,
+  ApiUserDeveloperTypeValue,
   ApiUser,
-  ApiUserDeveloperType,
-  ApiUserState,
-  ApiUserStatus,
-} from "./user";
+} from "./user.ts";
 
-export interface ApiAuth {
+export type ApiAuth = {
   ok?: boolean;
   token?: string;
-}
+};
 
-export interface ApiLoginUser {
+export type ApiLoginUser = {
   id?: string;
   username?: string;
   displayName?: string;
@@ -57,13 +59,13 @@ export interface ApiLoginUser {
   homeLocation?: string;
   twoFactorAuthEnabled?: boolean;
   twoFactorAuthEnabledDate?: DateTimeString;
-  status?: ApiUserStatus;
+  status?: ApiUserStatusValue;
   statusDescription?: string;
-  state?: ApiUserState;
+  state?: ApiUserStateValue;
   tags?: string[];
-  developerType?: ApiUserDeveloperType;
+  developerType?: ApiUserDeveloperTypeValue;
   last_login?: DateTimeString;
-  last_platform?: ApiPlatform;
+  last_platform?: ApiPlatformValue;
   allowAvatarCopying?: boolean;
   date_joined?: string;
   isFriend?: boolean;
@@ -76,39 +78,45 @@ export interface ApiLoginUser {
   /** @deprecated */
   offlineFriends?: string[];
   /** 2FA */
-  requiresTwoFactorAuth?: ApiTwoFactorAuthType[];
-}
+  requiresTwoFactorAuth?: ApiTwoFactorAuthTypeValue[];
+};
 
-export interface LoginUser {
+export type LoginUser = {
   id: string;
   apiLoginUser: ApiLoginUser;
-}
+};
 
-export const enum ApiTwoFactorAuthType {
-  TIME_BASED_ONE_TIME_PASSWORD_AUTHENTICATION = "totp",
-  ONE_TIME_PASSWORD_AUTHENTICATION = "otp",
-  SMS_AUTHENTICATION = "sms",
-}
+export const ApiTwoFactorAuthType = {
+  TIME_BASED_ONE_TIME_PASSWORD_AUTHENTICATION: "totp",
+  ONE_TIME_PASSWORD_AUTHENTICATION: "otp",
+  SMS_AUTHENTICATION: "sms",
+};
 
-export interface ApiTwoFactorAuth {
+export type ApiTwoFactorAuthTypeValue =
+  (typeof ApiTwoFactorAuthType)[keyof typeof ApiTwoFactorAuthType];
+
+export type ApiTwoFactorAuth = {
   verified?: boolean;
-}
+};
 
-export const enum ApiPermissionName {
-  EarlyAdopterTags = "permission-early-adopter-tags",
-  ExtraFavoritesAvatarGroups = "permission-extra-favorites-avatar-groups",
-  InvitePhotos = "permission-invite-photos",
-  ProfilePicOverride = "permission-profile-pic-override",
-  SupporterTags = "permission-supporter-tags",
-  TrustBoost = "permission-trust-boost",
-  UserGallery = "permission-user-gallery",
-  UserIcons = "permission-user-icons",
-}
+export const ApiPermissionName = {
+  EarlyAdopterTags: "permission-early-adopter-tags",
+  ExtraFavoritesAvatarGroups: "permission-extra-favorites-avatar-groups",
+  InvitePhotos: "permission-invite-photos",
+  ProfilePicOverride: "permission-profile-pic-override",
+  SupporterTags: "permission-supporter-tags",
+  TrustBoost: "permission-trust-boost",
+  UserGallery: "permission-user-gallery",
+  UserIcons: "permission-user-icons",
+};
 
-export interface ApiPermission {
+export type ApiPermissionNameValue =
+  (typeof ApiPermissionName)[keyof typeof ApiPermissionName];
+
+export type ApiPermission = {
   id?: string;
   ownerId?: string;
-  name?: ApiPermissionName;
+  name?: ApiPermissionNameValue;
   data?: {
     tags?: string[];
     maxFavoritePerGroup?: {
@@ -118,9 +126,9 @@ export interface ApiPermission {
       [key: string]: number;
     };
   };
-}
+};
 
-export interface ApiSubscription {
+export type ApiSubscription = {
   // 'vrchatplus-yearly'
   id?: string;
   transactionId?: string;
@@ -140,16 +148,16 @@ export interface ApiSubscription {
   created_at?: DateTimeString;
   updated_at?: DateTimeString;
   licenseGroups?: string[];
-}
+};
 
-export const loginUser = vue.reactive<LoginUser>({
+export const loginUser = reactive<LoginUser>({
   id: "",
   apiLoginUser: {},
 });
 
-export const permissionMap = vue.reactive(new Map<string, ApiPermission>());
+export const permissionMap = reactive(new Map<string, ApiPermission>());
 
-pubsub.subscribe("api:login", () => {
+subscribe("api:login", () => {
   permissionMap.clear();
 });
 
@@ -174,15 +182,15 @@ function applyLoginUser({
   delete apiLoginUser.offlineFriends;
 
   // replace
-  loginUser.id = apiLoginUser.id ?? "";
-  loginUser.apiLoginUser = vue.reactive(apiLoginUser);
+  loginUser.id = apiLoginUser.id || "";
+  loginUser.apiLoginUser = reactive(apiLoginUser);
 
   if (apiLoginUser.requiresTwoFactorAuth !== void 0) {
     isLoggedIn.value = false;
     return;
   }
 
-  pubsub.publish("api:login-user");
+  publish("api:login-user");
   isLoggedIn.value = true;
 }
 
@@ -220,7 +228,7 @@ export function sendPasswordRecoveryLink(email: string) {
 }
 
 export async function verifyTwoFactorAuthCode(
-  type: ApiTwoFactorAuthType,
+  type: ApiTwoFactorAuthTypeValue,
   code: string,
 ) {
   const response = await api<ApiTwoFactorAuth>({

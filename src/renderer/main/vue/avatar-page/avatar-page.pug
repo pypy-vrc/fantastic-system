@@ -3,7 +3,7 @@
     template(v-if="avatar")
         div
             img(:src="avatar.apiAvatar.thumbnailImageUrl"
-                :alt="avatar.apiAvatar.displayName ?? avatar.id"
+                :alt="avatar.apiAvatar.displayName || avatar.id"
                 style="width: 256px; height: 192px;")
         div name={{ avatar.apiAvatar.name }}
         div description={{ avatar.apiAvatar.description }}

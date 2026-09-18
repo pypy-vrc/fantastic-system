@@ -1,16 +1,16 @@
-import * as path from "path";
-import * as electron from "electron";
-import * as native from "native";
-import * as util from "../../common/util";
+import { join } from "path";
+import { app, BrowserWindow } from "electron";
+import { OverlayTarget, setOverlayFrameBuffer } from "native";
+import { nop } from "../../common/util.ts";
 
-let window: electron.BrowserWindow | undefined = void 0;
+let window: BrowserWindow | undefined = void 0;
 
-export function create() {
+export function createWristWindow() {
   if (window !== void 0) {
     return;
   }
 
-  window = new electron.BrowserWindow({
+  window = new BrowserWindow({
     width: 512,
     height: 512,
     resizable: false,
@@ -22,7 +22,7 @@ export function create() {
     transparent: true,
     webPreferences: {
       nodeIntegration: false,
-      preload: path.join(electron.app.getAppPath(), "./dist/preload.js"),
+      preload: join(app.getAppPath(), "./dist/preload.cjs"),
       sandbox: false,
       defaultEncoding: "utf-8",
       backgroundThrottling: false,
@@ -38,8 +38,8 @@ export function create() {
   window.on("close", () => window?.webContents.closeDevTools());
 
   window.webContents.on("paint", (_e, { x, y, width, height }, image) =>
-    native.setOverlayFrameBuffer(
-      native.OverlayTarget.Wrist,
+    setOverlayFrameBuffer(
+      OverlayTarget.Wrist,
       x,
       y,
       width,
@@ -55,10 +55,10 @@ export function create() {
   //   "https://testdrive-archive.azurewebsites.net/performance/fishbowl/"
   // );
 
-  window.loadFile("./dist/overlay-wrist.html").catch(util.nop);
+  window.loadFile("./dist/overlay-wrist.html").catch(nop);
 }
 
-export function destroy() {
+export function destroyWristWindow() {
   try {
     window?.destroy();
     window = void 0;
@@ -67,6 +67,6 @@ export function destroy() {
   }
 }
 
-export function send(channel: string, ...args: unknown[]) {
+export function sendToWristWindow(channel: string, ...args: unknown[]) {
   window?.webContents.send(channel, ...args);
 }

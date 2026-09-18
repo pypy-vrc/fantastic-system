@@ -1,14 +1,20 @@
-import * as vue from "vue";
-import * as util from "../../../../common/util";
-import * as router from "../../router";
-import * as api from "../../game/api";
-import * as VueLocation from "../location/index.vue";
+import { computed } from "vue";
+import { formatDate } from "../../../../common/util.ts";
+import { goUserPage } from "../../router.ts";
+import {
+  acceptNotification,
+  fetchWorldInstanceShortName,
+  hideNotification,
+  inviteMe,
+  type Notification,
+} from "../../game/api/index.ts";
+import VueLocation from "../location/index.vue";
 
 const { ipcRenderer } = window;
 
-interface Props {
-  notification: api.Notification;
-}
+type Props = {
+  notification: Notification;
+};
 
 export default {
   name: "NotificationListItem",
@@ -16,21 +22,21 @@ export default {
     notification: Object,
   },
   components: {
-    Location: VueLocation.default,
+    Location: VueLocation,
   },
   setup(props: Props) {
-    const notificationRef = vue.computed(() => props.notification);
+    const notificationRef = computed(() => props.notification);
 
     return {
       notification: notificationRef,
-      formatDate: util.formatDate,
+      formatDate: formatDate,
       clickSender() {
         const { senderUserId } = notificationRef.value.apiNotification;
         if (senderUserId === void 0) {
           return;
         }
 
-        router.goUserPage(senderUserId);
+        goUserPage(senderUserId);
       },
       async hideNotification() {
         try {
@@ -39,7 +45,7 @@ export default {
             return;
           }
 
-          await api.hideNotification(notificationRef.value.id);
+          await hideNotification(notificationRef.value.id);
         } catch (err) {
           console.error(err);
         }
@@ -51,7 +57,7 @@ export default {
             return;
           }
 
-          await api.acceptNotification(notificationRef.value.id);
+          await acceptNotification(notificationRef.value.id);
         } catch (err) {
           console.error(err);
         }
@@ -63,7 +69,7 @@ export default {
             return;
           }
 
-          await api.hideNotification(notificationRef.value.id);
+          await hideNotification(notificationRef.value.id);
         } catch (err) {
           console.error(err);
         }
@@ -85,7 +91,7 @@ export default {
             return;
           }
 
-          await api.inviteMe(worldId);
+          await inviteMe(worldId);
         } catch (err) {
           console.error(err);
         }
@@ -107,12 +113,12 @@ export default {
             return;
           }
 
-          const response = await api.fetchWorldInstanceShortName(worldId);
+          const response = await fetchWorldInstanceShortName(worldId);
 
           await ipcRenderer.invoke(
             "native:playGame",
             `vrchat://launch?id=${worldId}&shortName=${
-              response.data?.secureName ?? ""
+              response.data?.secureName || ""
             }`,
           );
         } catch (err) {

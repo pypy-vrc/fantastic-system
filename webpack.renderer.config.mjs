@@ -1,13 +1,13 @@
-const path = require("path");
-const TerserPlugin = require("terser-webpack-plugin");
-const ForkTsCheckerWebpackPlugin = require("fork-ts-checker-webpack-plugin");
-const CopyPlugin = require("copy-webpack-plugin");
-const HtmlWebpackPlugin = require("html-webpack-plugin");
-const MiniCssExtractPlugin = require("mini-css-extract-plugin");
-// const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
-const { VueLoaderPlugin } = require("vue-loader");
+import path from "path";
+import TerserPlugin from "terser-webpack-plugin";
+import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
+import CopyPlugin from "copy-webpack-plugin";
+import HtmlWebpackPlugin from "html-webpack-plugin";
+import MiniCssExtractPlugin from "mini-css-extract-plugin";
+// import CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
+import { VueLoaderPlugin } from "vue-loader";
 
-module.exports = {
+export default {
   entry: {
     vendor: [
       "vue",
@@ -39,7 +39,7 @@ module.exports = {
     },
   },
   output: {
-    filename: "[name].js",
+    filename: "[name].cjs",
     library: {
       type: "window",
     },
@@ -89,13 +89,13 @@ module.exports = {
   resolve: {
     extensions: [".css", ".js", ".json", ".scss", ".ts", ".vue"],
     alias: {
-      vue: path.join(
-        __dirname,
-        "./node_modules/vue/dist/vue.runtime.esm-browser.prod.js"
+      vue: path.resolve(
+        // "./node_modules/vue/dist/vue.runtime.esm-browser.prod.js",
+        "./node_modules/vue/dist/vue.esm-browser.js",
       ),
-      "vue-i18n": path.join(
-        __dirname,
-        "./node_modules/vue-i18n/dist/vue-i18n.runtime.esm-browser.prod.js"
+      "vue-i18n": path.resolve(
+        // "./node_modules/vue-i18n/dist/vue-i18n.runtime.esm-browser.prod.js",
+        "./node_modules/vue-i18n/dist/vue-i18n.esm-browser.js",
       ),
     },
   },

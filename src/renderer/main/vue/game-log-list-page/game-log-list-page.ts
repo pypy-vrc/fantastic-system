@@ -1,20 +1,27 @@
-import * as vue from "vue";
-import * as util from "../../../../common/util";
-import * as log from "../../game/log";
-import * as api from "../../game/api";
-import { goUserPage } from "../../router";
-import * as loading from "../loading";
-import { now } from "../clock";
-import * as VueLocation from "../location/index.vue";
-import * as VueGameLogListItem from "../game-log-list-item/index.vue";
+import { computed, ref } from "vue";
+import { getDurationString } from "../../../../common/util.ts";
+import { instanceLogRows, logContext } from "../../game/log.ts";
+import {
+  ApiStatusCode,
+  fetchUserList,
+  fetchWorldInstanceShortName,
+  inviteMe,
+  parseLocation,
+  userMap,
+} from "../../game/api/index.ts";
+import { goUserPage } from "../../router.ts";
+import { decrementLoading, incrementLoading } from "../loading.ts";
+import { now } from "../clock.ts";
+import VueLocation from "../location/index.vue";
+import VueGameLogListItem from "../game-log-list-item/index.vue";
 
 const { ipcRenderer } = window;
 
-const pageSize = vue.ref(100);
-const currentPage = vue.ref(1);
+const pageSize = ref(100);
+const currentPage = ref(1);
 
-const gameDurationRef = vue.computed(() => {
-  const summary = log.summary.value;
+const gameDurationRef = computed(() => {
+  const summary = logContext.value;
   if (summary === void 0) {
     return "";
   }
@@ -30,11 +37,11 @@ const gameDurationRef = vue.computed(() => {
     return "";
   }
 
-  return util.getDurationString(time);
+  return getDurationString(time);
 });
 
-const roomDurationRef = vue.computed(() => {
-  const summary = log.summary.value;
+const roomDurationRef = computed(() => {
+  const summary = logContext.value;
   if (summary === void 0) {
     return "";
   }
@@ -50,11 +57,11 @@ const roomDurationRef = vue.computed(() => {
     return "";
   }
 
-  return util.getDurationString(time);
+  return getDurationString(time);
 });
 
-const roomUserListRef = vue.computed(() => {
-  const summary = log.summary.value;
+const roomUserListRef = computed(() => {
+  const summary = logContext.value;
   if (summary === void 0) {
     return [];
   }
@@ -72,18 +79,18 @@ const roomUserListRef = vue.computed(() => {
 });
 
 async function clickUser(targetDisplayName: string) {
-  for (const user of api.userMap.values()) {
+  for (const user of userMap.values()) {
     if (user.apiUser.displayName === targetDisplayName) {
       goUserPage(user.id);
       return;
     }
   }
 
-  loading.increment();
+  incrementLoading();
 
   try {
-    const { status, data } = await api.fetchUserList(targetDisplayName, 50, 0);
-    if (status === api.ApiStatusCode.OK && data !== void 0) {
+    const { status, data } = await fetchUserList(targetDisplayName, 50, 0);
+    if (status === ApiStatusCode.OK && data !== void 0) {
       for (const apiUser of data) {
         const { id, displayName } = apiUser;
         if (id === void 0 || displayName === void 0) {
@@ -100,12 +107,12 @@ async function clickUser(targetDisplayName: string) {
     console.error(err);
   }
 
-  loading.decrement();
+  decrementLoading();
 }
 
 async function sendInviteMe(location: string, worldName: string) {
   try {
-    const locationInfo = api.parseLocation(location);
+    const locationInfo = parseLocation(location);
     if (locationInfo.instanceId === void 0) {
       return;
     }
@@ -115,7 +122,7 @@ async function sendInviteMe(location: string, worldName: string) {
       return;
     }
 
-    await api.inviteMe(location);
+    await inviteMe(location);
   } catch (err) {
     console.error(err);
   }
@@ -123,7 +130,7 @@ async function sendInviteMe(location: string, worldName: string) {
 
 async function playGame(location: string, worldName: string) {
   try {
-    const locationInfo = api.parseLocation(location);
+    const locationInfo = parseLocation(location);
     if (locationInfo.instanceId === void 0) {
       return;
     }
@@ -133,12 +140,12 @@ async function playGame(location: string, worldName: string) {
       return;
     }
 
-    const response = await api.fetchWorldInstanceShortName(location);
+    const response = await fetchWorldInstanceShortName(location);
 
     await ipcRenderer.invoke(
       "native:playGame",
       `vrchat://launch?id=${location}&shortName=${
-        response.data?.secureName ?? ""
+        response.data?.secureName || ""
       }`,
     );
   } catch (err) {
@@ -149,19 +156,19 @@ async function playGame(location: string, worldName: string) {
 export default {
   name: "GameLogListPage",
   components: {
-    Location: VueLocation.default,
-    GameLogListItem: VueGameLogListItem.default,
+    Location: VueLocation,
+    GameLogListItem: VueGameLogListItem,
   },
   setup() {
     return {
       pageSize,
       currentPage,
-      gameLogList: log.instanceLogRows,
-      summary: log.summary,
+      gameLogList: instanceLogRows,
+      summary: logContext,
       gameDuration: gameDurationRef,
       roomDuration: roomDurationRef,
       roomUserList: roomUserListRef,
-      getDurationString: util.getDurationString,
+      getDurationString: getDurationString,
       clickUser,
       sendInviteMe,
       playGame,

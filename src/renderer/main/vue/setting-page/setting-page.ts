@@ -1,4 +1,4 @@
-import { now } from "../clock";
+import { now } from "../clock.ts";
 
 export default {
   name: "SettingPage",

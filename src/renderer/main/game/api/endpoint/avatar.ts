@@ -1,11 +1,16 @@
-import * as vue from "vue";
-import * as pubsub from "../../../../../common/pubsub";
-import type { DateTimeString } from "../base";
-import { ApiReleaseStatus, ApiStatusCode, notFoundAvatarIdSet } from "../base";
-import { api, ApiRequestMethod, applyObject } from "../internal";
-import type { ApiUnityPackages } from "./file";
+import { reactive } from "vue";
+import { subscribe } from "../../../../../common/pubsub.ts";
+import {
+  ApiReleaseStatus,
+  ApiStatusCode,
+  notFoundAvatarIdSet,
+  type ApiReleaseStatusValue,
+  type DateTimeString,
+} from "../base.ts";
+import { api, ApiRequestMethod, applyObject } from "../internal.ts";
+import type { ApiUnityPackages } from "./file.ts";
 
-export interface ApiAvatar {
+export type ApiAvatar = {
   id?: string;
   name?: string;
   description?: string;
@@ -16,7 +21,7 @@ export interface ApiAvatar {
   assetUrlObject?: object;
   imageUrl?: string;
   thumbnailImageUrl?: string;
-  releaseStatus?: ApiReleaseStatus;
+  releaseStatus?: ApiReleaseStatusValue;
   version?: number;
   featured?: boolean;
   unityPackages?: ApiUnityPackages[];
@@ -24,16 +29,16 @@ export interface ApiAvatar {
   unityPackageUrlObject?: object;
   created_at?: DateTimeString;
   updated_at?: DateTimeString;
-}
+};
 
-export interface Avatar {
+export type Avatar = {
   id: string;
   apiAvatar: ApiAvatar;
-}
+};
 
-export const avatarMap = vue.reactive(new Map<string, Avatar>());
+export const avatarMap = reactive(new Map<string, Avatar>());
 
-pubsub.subscribe("api:login", () => {
+subscribe("api:login", () => {
   avatarMap.clear();
 });
 
@@ -45,7 +50,7 @@ export function applyAvatar(apiAvatar: ApiAvatar) {
 
   let avatar = avatarMap.get(id);
   if (avatar === void 0) {
-    avatar = vue.reactive<Avatar>({
+    avatar = reactive<Avatar>({
       id,
       apiAvatar: {},
     });

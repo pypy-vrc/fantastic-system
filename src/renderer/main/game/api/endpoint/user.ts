@@ -1,46 +1,59 @@
-import * as vue from "vue";
-import * as pubsub from "../../../../../common/pubsub";
-import * as util from "../../../../../common/util";
-import type { ApiPlatform, ApiSuccess, DateTimeString } from "../base";
+import { reactive } from "vue";
+import { subscribe } from "../../../../../common/pubsub.ts";
+import { nop } from "../../../../../common/util.ts";
 import {
   ApiStatusCode,
   lazyFetchUserIdSet,
   lazyFetchWorldIdSet,
   notFoundUserIdSet,
-} from "../base";
-import { api, ApiRequestMethod, applyObject } from "../internal";
-import type { LocationInfo } from "../location";
-import { parseLocation, ReservedLocation } from "../location";
+  type ApiPlatformValue,
+  type ApiSuccess,
+  type DateTimeString,
+} from "../base.ts";
+import { api, ApiRequestMethod, applyObject } from "../internal.ts";
+import {
+  parseLocation,
+  ReservedLocation,
+  type LocationInfo,
+} from "../location.ts";
 import {
   fetchOfflineFriendList,
   fetchOnlineFriendList,
   loginUser,
-} from "./auth";
-import type { Instance } from "./world";
-import { applyWorld, worldMap } from "./world";
+} from "./auth.ts";
+import { applyWorld, worldMap, type Instance } from "./world.ts";
 
-export const enum ApiUserDeveloperType {
-  None = "none",
-  Trusted = "trusted",
-  Internal = "internal",
-  Moderator = "moderator",
-}
+export const ApiUserDeveloperType = {
+  None: "none",
+  Trusted: "trusted",
+  Internal: "internal",
+  Moderator: "moderator",
+};
 
-export const enum ApiUserStatus {
-  Offline = "offline",
-  Online = "active",
-  JoinMe = "join me",
-  AskMe = "ask me",
-  DoNotDisturb = "busy",
-}
+export type ApiUserDeveloperTypeValue =
+  (typeof ApiUserDeveloperType)[keyof typeof ApiUserDeveloperType];
 
-export const enum ApiUserState {
-  Offline = "offline",
-  Active = "active",
-  Online = "online",
-}
+export const ApiUserStatus = {
+  Offline: "offline",
+  Online: "active",
+  JoinMe: "join me",
+  AskMe: "ask me",
+  DoNotDisturb: "busy",
+};
 
-export interface ApiUser {
+export type ApiUserStatusValue =
+  (typeof ApiUserStatus)[keyof typeof ApiUserStatus];
+
+export const ApiUserState = {
+  Offline: "offline",
+  Active: "active",
+  Online: "online",
+};
+
+export type ApiUserStateValue =
+  (typeof ApiUserState)[keyof typeof ApiUserState];
+
+export type ApiUser = {
   id?: string;
   username?: string;
   displayName?: string;
@@ -51,14 +64,14 @@ export interface ApiUser {
   currentAvatarImageUrl?: string;
   currentAvatarThumbnailImageUrl?: string;
   fallbackAvatar?: string;
-  status?: ApiUserStatus;
+  status?: ApiUserStatusValue;
   statusDescription?: string;
-  state?: ApiUserState;
+  state?: ApiUserStateValue;
   tags?: string[];
-  developerType?: ApiUserDeveloperType;
+  developerType?: ApiUserDeveloperTypeValue;
   last_login?: DateTimeString;
   // "2019.2.2-772-Release"
-  last_platform?: ApiPlatform;
+  last_platform?: ApiPlatformValue;
   allowAvatarCopying?: boolean;
   /** YYYY-MM-DD */
   date_joined?: string;
@@ -240,69 +253,76 @@ export interface ApiUser {
   // isFriend: boolean;
   // location: string;
   // travelingToLocation: string;
-}
+};
 
-export interface ApiFriendStatus {
+export type ApiFriendStatus = {
   isFriend?: boolean;
   outgoingRequest?: boolean;
   incomingRequest?: boolean;
-}
+};
 
-export interface ApiUserNote {
+export type ApiUserNote = {
   id: string;
   userId: string;
   targetUserId: string;
   note: string;
   createdAt: string;
-}
+};
 
-export const enum UserState {
-  Offline = "offline",
-  Active = "active",
-  Online = "online",
-  Private = "private",
-}
+export const UserState = {
+  Offline: "offline",
+  Active: "active",
+  Online: "online",
+  Private: "private",
+};
 
-export const enum UserStatus {
-  Offline = "offline",
-  Active = "active",
-  Online = "online",
-  JoinMe = "join-me",
-  AskMe = "ask-me",
-  DoNotDisturb = "do-not-disturb",
-}
+export type UserStatusValue = (typeof UserStatus)[keyof typeof UserStatus];
 
-export const enum UserTrustLevel {
-  Visitor = "visitor",
-  New = "new",
-  User = "user",
-  Known = "known",
-  Trusted = "trusted",
-  Troll = "troll",
-  Moderator = "moderator",
-}
+export const UserStatus = {
+  Offline: "offline",
+  Active: "active",
+  Online: "online",
+  JoinMe: "join-me",
+  AskMe: "ask-me",
+  DoNotDisturb: "do-not-disturb",
+};
 
-export interface User {
+export type UserStateValue = (typeof UserState)[keyof typeof UserState];
+
+export const UserTrustLevel = {
+  Visitor: "visitor",
+  New: "new",
+  User: "user",
+  Known: "known",
+  Trusted: "trusted",
+  Troll: "troll",
+  Moderator: "moderator",
+};
+
+export type UserTrustLevelValue =
+  (typeof UserTrustLevel)[keyof typeof UserTrustLevel];
+
+export type User = {
   id: string;
   apiUser: ApiUser;
   locationInfo: LocationInfo;
   activityTime: number;
   locationTime: number;
-  state: UserState;
-  status: UserStatus;
-  trustLevel: UserTrustLevel;
+  state: ApiUserStateValue;
+  status: ApiUserStatusValue;
+  trustLevel: UserTrustLevelValue;
   trustLevelText: string;
   outgoingFriendRequest: boolean;
   incomingFriendRequest: boolean;
-}
+};
 
-export const userMap = vue.reactive(new Map<string, User>());
-export const onlineFriendSet = vue.reactive(new Set<User>());
-export const privateFriendSet = vue.reactive(new Set<User>());
-export const activeFriendSet = vue.reactive(new Set<User>());
-export const offlineFriendSet = vue.reactive(new Set<User>());
+export const userMap = reactive(new Map<string, User>());
+export const onlineFriendSet = reactive(new Set<User>());
+export const privateFriendSet = reactive(new Set<User>());
+export const activeFriendSet = reactive(new Set<User>());
+export const offlineFriendSet = reactive(new Set<User>());
 
-pubsub.subscribe("api:login", () => {
+subscribe("api:login", () => {
   userMap.clear();
   onlineFriendSet.clear();
   privateFriendSet.clear();
@@ -474,7 +494,7 @@ export function applyUserLocation(
 
     let instance = world.instances.get(location);
     if (instance === void 0) {
-      instance = vue.reactive<Instance>({
+      instance = reactive<Instance>({
         id: location,
         users: new Set(),
       });
@@ -503,7 +523,7 @@ export function applyUser(apiUser: ApiUser) {
 
   let user = userMap.get(id);
   if (user === void 0) {
-    user = vue.reactive<User>({
+    user = reactive<User>({
       id,
       apiUser: {},
       locationInfo: parseLocation(ReservedLocation.Offline),
@@ -615,7 +635,7 @@ export async function sendFriendRequest(userId: string) {
 
   const { status } = response;
   if (status === ApiStatusCode.OK) {
-    fetchFriendStatus(userId).catch(util.nop);
+    fetchFriendStatus(userId).catch(nop);
   }
 
   return response;
@@ -632,7 +652,7 @@ export async function cancelFriendRequest(userId: string) {
 
   const { status } = response;
   if (status === ApiStatusCode.OK) {
-    fetchFriendStatus(userId).catch(util.nop);
+    fetchFriendStatus(userId).catch(nop);
   }
 
   return response;
@@ -678,7 +698,7 @@ export async function saveUserNote(targetUserId: string, note: string) {
 
   const { status } = response;
   if (status === ApiStatusCode.OK) {
-    fetchUser(targetUserId).catch(util.nop);
+    fetchUser(targetUserId).catch(nop);
   }
 
   return response;

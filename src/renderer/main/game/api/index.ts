@@ -1,6 +1,6 @@
-import * as noty from "noty";
-import * as util from "../../../../common/util";
-import * as pubsub from "../../../../common/pubsub";
+import noty from "noty";
+import { escapeHtml, sleep } from "../../../../common/util.ts";
+import { subscribe } from "../../../../common/pubsub.ts";
 import {
   ApiStatusCode,
   isLoggedIn,
@@ -10,38 +10,38 @@ import {
   notFoundAvatarIdSet,
   notFoundUserIdSet,
   notFoundWorldIdSet,
-} from "./base";
-import { checkWebSocket } from "./pipeline";
+} from "./base.ts";
+import { checkWebSocket } from "./pipeline.ts";
 import {
   loginUser,
   fetchLoginUser,
   syncPermissionInternal,
-} from "./endpoint/auth";
-import { syncFavoriteInternal } from "./endpoint/favorite";
-import { syncNotificationInternal } from "./endpoint/notification";
-import { syncPlayerModerationInternal } from "./endpoint/player-moderation";
+} from "./endpoint/auth.ts";
+import { syncFavoriteInternal } from "./endpoint/favorite.ts";
+import { syncNotificationInternal } from "./endpoint/notification.ts";
+import { syncPlayerModerationInternal } from "./endpoint/player-moderation.ts";
 import {
   fetchUser,
   syncFriendInternal,
   userMap,
   UserState,
-} from "./endpoint/user";
-import { fetchWorld } from "./endpoint/world";
-import { fetchAvatar } from "./endpoint/avatar";
+} from "./endpoint/user.ts";
+import { fetchWorld } from "./endpoint/world.ts";
+import { fetchAvatar } from "./endpoint/avatar.ts";
 
-export * from "./base";
-export * from "./location";
-export * from "./endpoint/auth";
-export * from "./endpoint/avatar";
-export * from "./endpoint/config";
-export * from "./endpoint/etc";
-export * from "./endpoint/favorite";
-export * from "./endpoint/file";
-export * from "./endpoint/message";
-export * from "./endpoint/notification";
-export * from "./endpoint/player-moderation";
-export * from "./endpoint/user";
-export * from "./endpoint/world";
+export * from "./base.ts";
+export * from "./location.ts";
+export * from "./endpoint/auth.ts";
+export * from "./endpoint/avatar.ts";
+export * from "./endpoint/config.ts";
+export * from "./endpoint/etc.ts";
+export * from "./endpoint/favorite.ts";
+export * from "./endpoint/file.ts";
+export * from "./endpoint/message.ts";
+export * from "./endpoint/notification.ts";
+export * from "./endpoint/player-moderation.ts";
+export * from "./endpoint/user.ts";
+export * from "./endpoint/world.ts";
 
 let hasFreshLoginUser = false;
 let nextLoginUserSyncTime = 0;
@@ -52,12 +52,12 @@ let nextNotificationSyncTime = 0;
 let nextPlayerModerationSyncTime = 0;
 let nextFavoriteSyncTime = 0;
 
-pubsub.subscribe("api:login-user", () => {
+subscribe("api:login-user", () => {
   hasFreshLoginUser = true;
   nextLoginUserSyncTime = Date.now() + 60 * 1000; // 1m
 });
 
-pubsub.subscribe("api:login", () => {
+subscribe("api:login", () => {
   // nextLoginUserSyncTime = 0;
   nextFriendSyncTime = 0;
   nextRecentFriendSyncTime = 0;
@@ -66,25 +66,25 @@ pubsub.subscribe("api:login", () => {
   nextPlayerModerationSyncTime = 0;
   nextFavoriteSyncTime = 0;
 
-  new noty.default({
+  new noty({
     type: "info",
     layout: "bottomRight",
     theme: "sunset",
-    text: `Hello there, ${util.escapeHtml(
-      loginUser.apiLoginUser.displayName ?? loginUser.id,
+    text: `Hello there, ${escapeHtml(
+      loginUser.apiLoginUser.displayName || loginUser.id,
     )}`,
     timeout: 6000,
     queue: "api",
   }).show();
 });
 
-pubsub.subscribe("api:logout", () => {
-  new noty.default({
+subscribe("api:logout", () => {
+  new noty({
     type: "info",
     layout: "bottomRight",
     theme: "sunset",
-    text: `See you again, ${util.escapeHtml(
-      loginUser.apiLoginUser.displayName ?? loginUser.id,
+    text: `See you again, ${escapeHtml(
+      loginUser.apiLoginUser.displayName || loginUser.id,
     )}`,
     timeout: 6000,
     queue: "api",
@@ -205,7 +205,7 @@ async function syncFavorite() {
 
 (async function syncLoop() {
   for (;;) {
-    await util.sleep(1007);
+    await sleep(1007);
 
     try {
       if (!isLoggedIn.value) {
@@ -245,14 +245,14 @@ async function syncFavorite() {
 
 (async function fetchUserLoop() {
   for (;;) {
-    await util.sleep(500);
+    await sleep(500);
 
     try {
       if (!isLoggedIn.value || lazyFetchUserIdSet.size === 0) {
         continue;
       }
 
-      for (const userId of [...lazyFetchUserIdSet]) {
+      for (const userId of lazyFetchUserIdSet) {
         if (notFoundUserIdSet.has(userId)) {
           lazyFetchUserIdSet.delete(userId);
           continue;
@@ -275,14 +275,14 @@ async function syncFavorite() {
 
 (async function fetchWorldLoop() {
   for (;;) {
-    await util.sleep(500);
+    await sleep(500);
 
     try {
       if (!isLoggedIn.value || lazyFetchWorldIdSet.size === 0) {
         continue;
       }
 
-      for (const worldId of [...lazyFetchWorldIdSet]) {
+      for (const worldId of lazyFetchWorldIdSet) {
         if (notFoundWorldIdSet.has(worldId)) {
           lazyFetchWorldIdSet.delete(worldId);
           continue;
@@ -305,14 +305,14 @@ async function syncFavorite() {
 
 (async function fetchAvatarLoop() {
   for (;;) {
-    await util.sleep(500);
+    await sleep(500);
 
     try {
       if (!isLoggedIn.value || lazyFetchAvatarIdSet.size === 0) {
         continue;
       }
 
-      for (const avatarId of [...lazyFetchAvatarIdSet]) {
+      for (const avatarId of lazyFetchAvatarIdSet) {
         if (notFoundAvatarIdSet.has(avatarId)) {
           lazyFetchAvatarIdSet.delete(avatarId);
           continue;

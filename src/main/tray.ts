@@ -1,35 +1,35 @@
-import * as electron from "electron";
-import * as pubsub from "../common/pubsub";
-import * as global from "./global";
+import { Menu, Tray } from "electron";
+import { publish } from "../common/pubsub.ts";
+import { APP_ICON } from "./global.ts";
 
-let tray: electron.Tray | undefined = void 0;
+let tray: Tray | undefined = void 0;
 
-export function create() {
+export function createTray() {
   if (tray !== void 0) {
     return;
   }
 
-  tray = new electron.Tray(global.appIcon);
-  tray.on("double-click", () => pubsub.publish("tray:double-click"));
+  tray = new Tray(APP_ICON);
+  tray.on("double-click", () => publish("tray:double-click"));
   tray.setContextMenu(
-    electron.Menu.buildFromTemplate([
+    Menu.buildFromTemplate([
       {
         label: "Open",
-        click: () => pubsub.publish("tray:open"),
+        click: () => publish("tray:open"),
       },
       {
         type: "separator",
       },
       {
         label: "Quit",
-        click: () => pubsub.publish("tray:quit"),
+        click: () => publish("tray:quit"),
       },
     ]),
   );
   tray.setToolTip("senpai1");
 }
 
-export function destroy() {
+export function destroyTray() {
   try {
     tray?.destroy();
     tray = void 0;

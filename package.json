@@ -10,12 +10,13 @@
     "url": "https://github.com/pypy-vrc/senpai/issues"
   },
   "license": "MIT",
-  "author": "pypy <git@pypy.gg>",
+  "author": "pypy <git@pypy.moe>",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/pypy-vrc/senpai.git"
   },
-  "main": "dist/index.js",
+  "type": "module",
+  "main": "dist/index.mjs",
   "scripts": {
     "start": "electron .",
     "postinstall": "electron-builder install-app-deps && npm run rebuild",
@@ -24,16 +25,17 @@
     "rebuild": "electron-rebuild -f",
     "dev": "npm run dev:main && npm run dev:preload && npm run dev:renderer",
     "prod": "npm run prod:main && npm run prod:preload && npm run prod:renderer",
-    "dev:main": "webpack --config webpack.main.config.js --mode development",
-    "watch:main": "webpack --config webpack.main.config.js --mode development --watch",
-    "prod:main": "webpack --config webpack.main.config.js --mode production",
-    "dev:preload": "webpack --config webpack.preload.config.js --mode development",
-    "watch:preload": "webpack --config webpack.preload.config.js --mode development --watch",
-    "prod:preload": "webpack --config webpack.preload.config.js --mode production",
-    "dev:renderer": "webpack --config webpack.renderer.config.js --mode development",
-    "watch:renderer": "webpack --config webpack.renderer.config.js --mode development --watch",
-    "prod:renderer": "webpack --config webpack.renderer.config.js --mode production",
-    "lint": "eslint --ext .js,.jsx,.ts src/ && prettier --check src/"
+    "dev:main": "webpack --config webpack.main.config.mjs --mode development",
+    "watch:main": "webpack --config webpack.main.config.mjs --mode development --watch",
+    "prod:main": "webpack --config webpack.main.config.mjs --mode production",
+    "dev:preload": "webpack --config webpack.preload.config.mjs --mode development",
+    "watch:preload": "webpack --config webpack.preload.config.mjs --mode development --watch",
+    "prod:preload": "webpack --config webpack.preload.config.mjs --mode production",
+    "dev:renderer": "webpack --config webpack.renderer.config.mjs --mode development",
+    "watch:renderer": "webpack --config webpack.renderer.config.mjs --mode development --watch",
+    "prod:renderer": "webpack --config webpack.renderer.config.mjs --mode production",
+    "lint": "eslint src && prettier --check src",
+    "fmt": "eslint --fix src && prettier --write src"
   },
   "dependencies": {
     "native": "file:native"
@@ -47,10 +49,10 @@
     "@vue/compiler-sfc": "^3.4.31",
     "copy-webpack-plugin": "^14.0.0",
     "css-loader": "^7.1.5",
-    "electron": "^44.4.2",
+    "electron": "^44.4.3",
     "electron-builder": "^26.15.3",
     "electron-rebuild": "^3.2.9",
-    "eslint": "^10.10.0",
+    "eslint": "^10.11.0",
     "eslint-config-prettier": "^10.1.8",
     "famfamfam-flags": "^1.0.0",
     "fork-ts-checker-webpack-plugin": "^9.1.0",

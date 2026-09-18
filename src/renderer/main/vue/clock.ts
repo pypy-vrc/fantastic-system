@@ -1,6 +1,6 @@
-import * as vue from "vue";
+import { ref } from "vue";
 
-export const now = vue.ref(Date.now());
+export const now = ref(Date.now());
 
 setInterval(() => {
   now.value = Date.now();

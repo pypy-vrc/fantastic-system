@@ -1,22 +1,29 @@
-import * as vue from "vue";
-import * as pubsub from "../../../../../common/pubsub";
-import type { ApiSuccess, DateTimeString } from "../base";
-import { ApiStatusCode, lazyFetchUserIdSet } from "../base";
-import { api, ApiRequestMethod } from "../internal";
-import { userMap } from "./user";
+import { reactive } from "vue";
+import { publish, subscribe } from "../../../../../common/pubsub.ts";
+import {
+  ApiStatusCode,
+  lazyFetchUserIdSet,
+  type ApiSuccess,
+  type DateTimeString,
+} from "../base.ts";
+import { api, ApiRequestMethod } from "../internal.ts";
+import { userMap } from "./user.ts";
 
-export const enum ApiNotificationType {
-  Message = "message",
-  FriendRequest = "friendRequest",
-  Invite = "invite",
-  ReqeustInvite = "requestInvite",
-  InviteResponse = "inviteResponse",
-  ReqeustInviteResponse = "requestInviteResponse",
-}
+export const ApiNotificationType = {
+  Message: "message",
+  FriendRequest: "friendRequest",
+  Invite: "invite",
+  ReqeustInvite: "requestInvite",
+  InviteResponse: "inviteResponse",
+  ReqeustInviteResponse: "requestInviteResponse",
+};
 
-export interface ApiNotification {
+export type ApiNotificationTypeValue =
+  (typeof ApiNotificationType)[keyof typeof ApiNotificationType];
+
+export type ApiNotification = {
   id?: string;
-  type?: ApiNotificationType;
+  type?: ApiNotificationTypeValue;
   senderUserId?: string;
   senderUsername?: string;
   receiverUserId?: string;
@@ -32,18 +39,18 @@ export interface ApiNotification {
   };
   seen?: boolean;
   created_at?: DateTimeString;
-}
+};
 
-export interface Notification {
+export type Notification = {
   id: string;
   time: number;
   apiNotification: ApiNotification;
-}
+};
 
-export const notificationMap = vue.reactive(new Map<string, Notification>());
-export const friendRequestMap = vue.reactive(new Map<string, Notification>());
+export const notificationMap = reactive(new Map<string, Notification>());
+export const friendRequestMap = reactive(new Map<string, Notification>());
 
-pubsub.subscribe("api:login", () => {
+subscribe("api:login", () => {
   notificationMap.clear();
   friendRequestMap.clear();
 });
@@ -56,7 +63,7 @@ export function applyNotification(apiNotification: ApiNotification) {
 
   let notification = notificationMap.get(id);
   if (notification === void 0) {
-    notification = vue.reactive<Notification>({
+    notification = reactive<Notification>({
       id,
       time: 0,
       apiNotification: {},
@@ -87,7 +94,7 @@ export function applyNotification(apiNotification: ApiNotification) {
     //
   }
 
-  notification.apiNotification = vue.reactive(apiNotification);
+  notification.apiNotification = reactive(apiNotification);
 }
 
 export function fetchNotificationList(n: number) {
@@ -109,7 +116,7 @@ export async function clearAllNotification() {
   const { status } = response;
   if (status === ApiStatusCode.OK) {
     notificationMap.clear();
-    pubsub.publish("notification:clearAllNotification");
+    publish("notification:clearAllNotification");
   }
 
   return response;

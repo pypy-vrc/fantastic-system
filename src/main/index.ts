@@ -1,13 +1,17 @@
-import * as electron from "electron";
-import * as native from "native";
-import * as util from "../common/util";
-import * as pubsub from "../common/pubsub";
-import * as global from "./global";
-import * as tray from "./tray";
-import * as mainWindow from "./window/main";
-import * as overlayHmdWindow from "./window/overlay-hmd";
-import * as overlayWristWindow from "./window/overlay-wrist";
-import * as vrchatLogWatcher from "./vrchat-log-watcher";
+import { app, ipcMain } from "electron";
+import native from "native";
+import { nop } from "../common/util.ts";
+import { subscribe } from "../common/pubsub.ts";
+import { IS_APP_QUIT } from "./global.ts";
+import { createTray, destroyTray } from "./tray.ts";
+import {
+  activateMainWindow,
+  createMainWindow,
+  destroyMainWindow,
+} from "./window/main.ts";
+import { destroyHmdWindow } from "./window/overlay-hmd.ts";
+import { destroyWristWindow } from "./window/overlay-wrist.ts";
+import { setupLogWatcher } from "./vrchat-log-watcher.ts";
 
 // clear cache
 // import { session } from "electron";
@@ -44,8 +48,6 @@ import * as vrchatLogWatcher from "./vrchat-log-watcher";
 // }
 
 (function main() {
-  const { app, ipcMain } = electron;
-
   app.setName("senpai1");
 
   if (process.platform === "win32") {
@@ -75,11 +77,11 @@ import * as vrchatLogWatcher from "./vrchat-log-watcher";
 
   app.on("ready", () => {
     try {
-      tray.create();
-      mainWindow.create();
-      // overlayHmdWindow.create();
-      // overlayWristWindow.create();
-      setImmediate(() => vrchatLogWatcher.setup().catch(util.nop));
+      createTray();
+      createMainWindow();
+      // createHmdWindow();
+      // createWristWindow();
+      setImmediate(() => setupLogWatcher().catch(nop));
     } catch (err) {
       console.error(err);
       app.exit();
@@ -87,19 +89,19 @@ import * as vrchatLogWatcher from "./vrchat-log-watcher";
   });
 
   app.on("will-quit", () => {
-    mainWindow.destroy();
-    overlayHmdWindow.destroy();
-    overlayWristWindow.destroy();
+    destroyMainWindow();
+    destroyHmdWindow();
+    destroyWristWindow();
   });
 
-  app.on("quit", () => tray.destroy());
-  app.on("activate", () => mainWindow.activate());
-  app.on("second-instance", () => mainWindow.activate());
+  app.on("quit", () => destroyTray());
+  app.on("activate", () => activateMainWindow());
+  app.on("second-instance", () => activateMainWindow());
 
-  pubsub.subscribe("tray:open", () => mainWindow.activate());
-  pubsub.subscribe("tray:double-click", () => mainWindow.activate());
-  pubsub.subscribe("tray:quit", () => {
-    global.isAppQuit.value = true;
+  subscribe("tray:open", () => activateMainWindow());
+  subscribe("tray:double-click", () => activateMainWindow());
+  subscribe("tray:quit", () => {
+    IS_APP_QUIT.value = true;
     setImmediate(() => app.quit());
   });
 

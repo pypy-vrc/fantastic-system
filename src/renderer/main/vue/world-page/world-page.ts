@@ -1,59 +1,65 @@
-import * as vue from "vue";
-import type * as vueRouter from "vue-router";
-import * as util from "../../../../common/util";
-import * as pubsub from "../../../../common/pubsub";
-import * as router from "../../router";
-import * as api from "../../game/api";
-import * as VueLocation from "../location/index.vue";
+import { computed, ref } from "vue";
+import type { RouteLocationNormalized } from "vue-router";
+import { nop } from "../../../../common/util.ts";
+import { subscribe } from "../../../../common/pubsub.ts";
+import { goUserPage } from "../../router.ts";
+import {
+  addToFavoriteGroup,
+  ApiFavoriteGroupType,
+  favoriteMap,
+  fetchWorld,
+  removeFromFavoriteGroup,
+  worldFavoriteGroupList,
+  worldMap,
+  type FavoriteGroup,
+} from "../../game/api/index.ts";
+import VueLocation from "../location/index.vue";
 
-const worldIdRef = vue.ref("");
+const worldIdRef = ref("");
 
-const worldRef = vue.computed(() => {
+const worldRef = computed(() => {
   console.log("WorldPage:worldRef", worldIdRef.value);
-  return api.worldMap.get(worldIdRef.value);
+  return worldMap.get(worldIdRef.value);
 });
 
-const favoriteRef = vue.computed(() => {
+const favoriteRef = computed(() => {
   console.log("WorldPage:favoriteRef", worldIdRef.value);
-  return api.favoriteMap.get(worldIdRef.value);
+  return favoriteMap.get(worldIdRef.value);
 });
 
-pubsub.subscribe(
-  "router:after-each",
-  ({ name, params }: vueRouter.RouteLocationNormalized) => {
-    if (name !== "world-page") {
-      return;
-    }
+subscribe("router:after-each", ({ name, params }: RouteLocationNormalized) => {
+  if (name !== "world-page") {
+    return;
+  }
 
-    const worldId = params.id as string;
-    console.log("WorldPage", worldId);
-    setWorldId(worldId).catch(util.nop);
-  },
-);
+  const worldId = params.id as string;
+  console.log("WorldPage", worldId);
+  setWorldId(worldId).catch(nop);
+});
 
 async function setWorldId(worldId: string) {
-  if (worldIdRef.value === worldId && api.worldMap.has(worldId)) {
+  if (worldIdRef.value === worldId && worldMap.has(worldId)) {
     return;
   }
 
   worldIdRef.value = worldId;
 
   try {
-    await api.fetchWorld(worldId);
+    await fetchWorld(worldId);
   } catch (err) {
     console.error(err);
   }
 }
 
-async function addFavorite(favoriteGroup: api.FavoriteGroup) {
+async function addFavorite(favoriteGroup: FavoriteGroup) {
   try {
     const action = confirm("addFavorite");
     if (!action) {
       return;
     }
 
-    await api.addToFavoriteGroup(
-      api.ApiFavoriteGroupType.World,
+    await addToFavoriteGroup(
+      ApiFavoriteGroupType.World,
       worldIdRef.value,
       favoriteGroup.apiFavoriteGroup.name,
     );
@@ -69,7 +75,7 @@ async function removeFavorite() {
       return;
     }
 
-    await api.removeFromFavoriteGroup(worldIdRef.value);
+    await removeFromFavoriteGroup(worldIdRef.value);
   } catch (err) {
     console.error(err);
   }
@@ -78,7 +84,7 @@ async function removeFavorite() {
 export default {
   name: "WorldPage",
   components: {
-    Location: VueLocation.default,
+    Location: VueLocation,
   },
   setup() {
     // let {params} = router.useRoute();
@@ -88,11 +94,11 @@ export default {
     // setWorldId(worldId);
 
     return {
-      worldFavoriteGroupList: api.worldFavoriteGroupList,
+      worldFavoriteGroupList: worldFavoriteGroupList,
       worldId: worldIdRef,
       world: worldRef,
       favorite: favoriteRef,
-      goUserPage: router.goUserPage,
+      goUserPage: goUserPage,
       addFavorite,
       removeFavorite,
     };

@@ -1,33 +1,45 @@
-export const enum ReservedLocation {
-  Offline = "offline",
-  InBetween = "inbetween",
-  Private = "private",
-  Traveling = "traveling",
-}
+export const ReservedLocation = {
+  Offline: "offline",
+  InBetween: "inbetween",
+  Private: "private",
+  Traveling: "traveling",
+};
 
-export const enum InstanceAccessType {
-  FriendsOfGuests = "friends+",
-  FriendsOnly = "friends",
-  InviteOnly = "invite",
-  InvitePlus = "invite+",
-  Public = "public",
-  Group = "group",
-}
+export type ReservedLocationValue =
+  (typeof ReservedLocation)[keyof typeof ReservedLocation];
 
-export const enum GroupAccessType {
-  Members = "members",
-  Plus = "plus",
-  Public = "public",
-}
+export const InstanceAccessType = {
+  FriendsOfGuests: "friends+",
+  FriendsOnly: "friends",
+  InviteOnly: "invite",
+  InvitePlus: "invite+",
+  Public: "public",
+  Group: "group",
+};
 
-export const enum NetworkRegion {
-  US_West = "us", // default value, omitted
-  US_Ease = "use",
-  Japan = "jp",
-  Europe = "eu",
-}
+export type InstanceAccessTypeValue =
+  (typeof InstanceAccessType)[keyof typeof InstanceAccessType];
 
-export interface LocationInfo {
+export const GroupAccessType = {
+  Members: "members",
+  Plus: "plus",
+  Public: "public",
+};
+
+export type GroupAccessTypeValue =
+  (typeof GroupAccessType)[keyof typeof GroupAccessType];
+
+export const NetworkRegion = {
+  US_West: "us", // default value, omitted
+  US_Ease: "use",
+  Japan: "jp",
+  Europe: "eu",
+};
+
+export type NetworkRegionValue =
+  (typeof NetworkRegion)[keyof typeof NetworkRegion];
+
+export type LocationInfo = {
   location: string;
   isOffline?: boolean;
   isPrivate?: boolean;
@@ -35,12 +47,12 @@ export interface LocationInfo {
   worldId?: string;
   instanceId?: string;
   name?: string;
-  region?: NetworkRegion;
-  accessType?: InstanceAccessType;
-  groupAccessType?: GroupAccessType;
+  region?: NetworkRegionValue;
+  accessType?: InstanceAccessTypeValue;
+  groupAccessType?: GroupAccessTypeValue;
   displayAccessType?: string;
   ownerId?: string;
-}
+};
 
 export function parseLocation(location: string): LocationInfo {
   if (
@@ -116,7 +128,7 @@ export function parseLocation(location: string): LocationInfo {
         break;
 
       case "groupAccessType":
-        locationInfo.groupAccessType = tagData as GroupAccessType;
+        locationInfo.groupAccessType = tagData as GroupAccessTypeValue;
         break;
 
       case "hidden":
@@ -128,7 +140,7 @@ export function parseLocation(location: string): LocationInfo {
         break;
 
       case "region":
-        locationInfo.region = tagData as NetworkRegion;
+        locationInfo.region = tagData as NetworkRegionValue;
         break;
     }
   }

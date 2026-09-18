@@ -1,98 +1,109 @@
-import * as vue from "vue";
-import * as api from "../../game/api";
-import * as loading from "../loading";
+import { computed, reactive } from "vue";
+import {
+  ApiStatusCode,
+  ApiTwoFactorAuthType,
+  changePassword,
+  isLoggedIn,
+  login,
+  loginUser,
+  logout,
+  permissionMap,
+  sendPasswordRecoveryLink,
+  verifyTwoFactorAuthCode,
+} from "../../game/api/index.ts";
+import { decrementLoading, incrementLoading } from "../loading.ts";
 
-const loginForm = vue.reactive({
+const loginForm = reactive({
   username: "",
   password: "",
 });
 
-const twoFactorAuthForm = vue.reactive({
-  type: api.ApiTwoFactorAuthType.TIME_BASED_ONE_TIME_PASSWORD_AUTHENTICATION,
+const twoFactorAuthForm = reactive({
+  type: ApiTwoFactorAuthType.TIME_BASED_ONE_TIME_PASSWORD_AUTHENTICATION,
   code: "",
 });
 
-const recoverPasswordForm = vue.reactive({
+const recoverPasswordForm = reactive({
   email: "",
 });
 
-const changePasswordForm = vue.reactive({
+const changePasswordForm = reactive({
   password: "",
   currentPassword: "",
 });
 
-const permissionListRef = vue.computed(() => {
+const permissionListRef = computed(() => {
   // console.log('computed permissionList');
-  return [...api.permissionMap.values()].sort((a, b) =>
-    String(a.name).localeCompare(String(b.name)),
-  );
+  const permissions = [...permissionMap.values()];
+  permissions.sort((a, b) => String(a.name).localeCompare(String(b.name)));
+  return permissions;
 });
 
 async function submitLogin() {
-  loading.increment();
+  incrementLoading();
 
   try {
     const { username, password } = loginForm;
     loginForm.password = "";
-    await api.login(username, password);
+    await login(username, password);
   } catch (err) {
     console.error(err);
   }
 
-  loading.decrement();
+  decrementLoading();
 }
 
 async function submitLogout() {
-  loading.increment();
+  incrementLoading();
 
   try {
-    await api.logout();
+    await logout();
   } catch (err) {
     console.error(err);
   }
 
-  loading.decrement();
+  decrementLoading();
 }
 
 async function submitTwoFactorAuth() {
-  loading.increment();
+  incrementLoading();
 
   try {
     const { type, code } = twoFactorAuthForm;
     twoFactorAuthForm.code = "";
 
-    await api.verifyTwoFactorAuthCode(type, code);
+    await verifyTwoFactorAuthCode(type, code);
   } catch (err) {
     console.error(err);
   }
 
-  loading.decrement();
+  decrementLoading();
 }
 
 async function submitRecoverPassword() {
-  loading.increment();
+  incrementLoading();
 
   try {
     const { email } = recoverPasswordForm;
 
-    await api.sendPasswordRecoveryLink(email);
+    await sendPasswordRecoveryLink(email);
   } catch (err) {
     console.error(err);
   }
 
-  loading.decrement();
+  decrementLoading();
 }
 
-async function changePassword() {
-  loading.increment();
+async function doChangePassword() {
+  incrementLoading();
 
   try {
     const { currentPassword, password } = changePasswordForm;
     changePasswordForm.currentPassword = "";
     changePasswordForm.password = "";
 
-    const { status } = await api.changePassword(password, currentPassword);
-    if (status === api.ApiStatusCode.OK) {
+    const { status } = await changePassword(password, currentPassword);
+    if (status === ApiStatusCode.OK) {
       // ElNotification({
       //     message: 'Password changed',
       //     type: 'success'
@@ -102,15 +113,15 @@ async function changePassword() {
     console.error(err);
   }
 
-  loading.decrement();
+  decrementLoading();
 }
 
 export default {
   name: "LoginUserPage",
   setup() {
     return {
-      isLoggedIn: api.isLoggedIn,
-      loginUser: api.loginUser,
+      isLoggedIn: isLoggedIn,
+      loginUser: loginUser,
       loginForm,
       twoFactorAuthForm,
       recoverPasswordForm,
@@ -120,7 +131,7 @@ export default {
       submitLogout,
       submitTwoFactorAuth,
       submitRecoverPassword,
-      changePassword,
+      changePassword: doChangePassword,
     };
   },
 };

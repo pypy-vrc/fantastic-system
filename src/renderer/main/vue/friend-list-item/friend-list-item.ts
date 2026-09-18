@@ -1,10 +1,10 @@
-import * as vue from "vue";
-import { goUserPage } from "../../router";
-import * as api from "../../game/api";
+import { computed } from "vue";
+import { goUserPage } from "../../router.ts";
+import { worldMap, type User } from "../../game/api/index.ts";
 
-interface Props {
-  user: api.User;
-}
+type Props = {
+  user: User;
+};
 
 export default {
   name: "FriendListItem",
@@ -12,18 +12,18 @@ export default {
     user: Object,
   },
   setup(props: Props) {
-    const userRef = vue.computed(() => props.user);
+    const userRef = computed(() => props.user);
 
     return {
       user: userRef,
-      world: vue.computed(() => {
+      world: computed(() => {
         // console.log('FriendListItem:world', props.user.id);
         const { worldId } = userRef.value.locationInfo;
         if (worldId === void 0) {
           return;
         }
 
-        return api.worldMap.get(worldId);
+        return worldMap.get(worldId);
       }),
       goUserPage,
     };

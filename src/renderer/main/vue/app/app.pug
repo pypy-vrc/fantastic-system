@@ -11,7 +11,7 @@
         | senpai1
     .login-user(v-if="isLoggedIn")
         .display-name(@click.prevent="onLoginUserMenuCommand('myInfo')")
-            | {{ loginUser.apiLoginUser.displayName ?? loginUser.id }}
+            | {{ loginUser.apiLoginUser.displayName || loginUser.id }}
         .display-name(@click.prevent="onLoginUserMenuCommand('logout')")
             | Logout
     .window-controls

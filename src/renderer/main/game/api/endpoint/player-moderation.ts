@@ -1,38 +1,44 @@
-import * as vue from "vue";
-import * as pubsub from "../../../../../common/pubsub";
-import type { ApiSuccess, DateTimeString } from "../base";
-import { ApiStatusCode } from "../base";
-import { api, ApiRequestMethod } from "../internal";
+import { reactive } from "vue";
+import { subscribe } from "../../../../../common/pubsub.ts";
+import {
+  ApiStatusCode,
+  type ApiSuccess,
+  type DateTimeString,
+} from "../base.ts";
+import { api, ApiRequestMethod } from "../internal.ts";
 
-export const enum ApiPlayerModerationType {
-  Block = "block",
-  Mute = "mute",
-  Unmute = "unmute",
-  HideAvatar = "hideAvatar",
-  ShowAvatar = "showAvatar",
-}
+export const ApiPlayerModerationType = {
+  Block: "block",
+  Mute: "mute",
+  Unmute: "unmute",
+  HideAvatar: "hideAvatar",
+  ShowAvatar: "showAvatar",
+};
 
-export interface ApiPlayerModeration {
+export type ApiPlayerModerationTypeValue =
+  (typeof ApiPlayerModerationType)[keyof typeof ApiPlayerModerationType];
+
+export type ApiPlayerModeration = {
   id?: string;
-  type?: ApiPlayerModerationType;
+  type?: ApiPlayerModerationTypeValue;
   sourceUserId?: string;
   sourceDisplayName?: string;
   targetUserId?: string;
   targetDisplayName?: string;
   created?: DateTimeString;
-}
+};
 
-export interface PlayerModeration {
+export type PlayerModeration = {
   targetUserId: string;
   time: number;
   typeMap: Map<string, ApiPlayerModeration>;
-}
+};
 
-export const playerModerationMap = vue.reactive(
+export const playerModerationMap = reactive(
   new Map<string, PlayerModeration>(),
 );
 
-pubsub.subscribe("api:login", () => {
+subscribe("api:login", () => {
   playerModerationMap.clear();
 });
 
@@ -46,10 +52,10 @@ export function applyPlayerModeration(
 
   let playerModeration = playerModerationMap.get(targetUserId);
   if (playerModeration === void 0) {
-    playerModeration = vue.reactive<PlayerModeration>({
+    playerModeration = reactive<PlayerModeration>({
       targetUserId,
       time: 0,
-      typeMap: vue.reactive(new Map<string, ApiPlayerModeration>()),
+      typeMap: reactive(new Map<string, ApiPlayerModeration>()),
     });
     playerModerationMap.set(targetUserId, playerModeration);
   }
@@ -58,7 +64,7 @@ export function applyPlayerModeration(
     playerModeration.time = new Date(created).getTime();
   }
 
-  playerModeration.typeMap.set(type, vue.reactive(apiPlayerModeration));
+  playerModeration.typeMap.set(type, reactive(apiPlayerModeration));
 }
 
 export function fetchPlayerModerationList() {
@@ -84,7 +90,7 @@ export async function clearAllPlayerModeration() {
 
 export async function sendPlayerModeration(
   moderated: string,
-  type: ApiPlayerModerationType,
+  type: ApiPlayerModerationTypeValue,
 ) {
   const response = await api<ApiPlayerModeration>({
     method: ApiRequestMethod.POST,
@@ -105,7 +111,7 @@ export async function sendPlayerModeration(
 
 export async function deletePlayerModeration(
   moderated: string,
-  type: ApiPlayerModerationType,
+  type: ApiPlayerModerationTypeValue,
 ) {
   const response = await api<ApiSuccess>({
     method: ApiRequestMethod.PUT,

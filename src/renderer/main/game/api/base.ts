@@ -1,47 +1,52 @@
-import * as vue from "vue";
-import * as pubsub from "../../../../common/pubsub";
+import { ref, watch } from "vue";
+import { publish } from "../../../../common/pubsub.ts";
 
 export type DateTimeString = string;
 
-export const enum ApiStatusCode {
-  OK = 200,
-  Unauthorized = 401,
-  NotFound = 404,
-}
+export const ApiStatusCode = {
+  OK: 200,
+  Unauthorized: 401,
+  NotFound: 404,
+};
 
-export interface ApiResponse<T> {
+export type ApiResponse<T> = {
   status: number;
   data?: T;
-}
+};
 
-export interface ApiResult {
+export type ApiResult = {
   message: string;
   status_code: number;
-}
+};
 
-export interface ApiError {
+export type ApiError = {
   error?: ApiResult;
-}
+};
 
-export interface ApiSuccess {
+export type ApiSuccess = {
   success?: ApiResult;
-}
+};
 
-export const enum ApiPlatform {
-  UnknownPlatform = "unknownplatform",
-  StandaloneWindows = "standalonewindows",
-  Android = "android",
-  All = "all",
-}
+export const ApiPlatform = {
+  UnknownPlatform: "unknownplatform",
+  StandaloneWindows: "standalonewindows",
+  Android: "android",
+  All: "all",
+};
 
-export const enum ApiReleaseStatus {
-  All = "all",
-  Public = "public",
-  Private = "private",
-  Hidden = "hidden",
-}
+export type ApiPlatformValue = (typeof ApiPlatform)[keyof typeof ApiPlatform];
 
-export const isLoggedIn = vue.ref(false);
+export const ApiReleaseStatus = {
+  All: "all",
+  Public: "public",
+  Private: "private",
+  Hidden: "hidden",
+};
+
+export type ApiReleaseStatusValue =
+  (typeof ApiReleaseStatus)[keyof typeof ApiReleaseStatus];
+
+export const isLoggedIn = ref(false);
 export const lazyFetchUserIdSet = new Set<string>();
 export const lazyFetchWorldIdSet = new Set<string>();
 export const lazyFetchAvatarIdSet = new Set<string>();
@@ -51,10 +56,10 @@ export const notFoundAvatarIdSet = new Set<string>();
 
 const fetchUserTimerMap = new Map<string, unknown>();
 
-vue.watch(isLoggedIn, (value: boolean) => {
+watch(isLoggedIn, (value: boolean) => {
   if (!value) {
     console.log("logout");
-    pubsub.publish("api:logout");
+    publish("api:logout");
     return;
   }
 
@@ -71,7 +76,7 @@ vue.watch(isLoggedIn, (value: boolean) => {
   fetchUserTimerMap.clear();
 
   console.log("login");
-  pubsub.publish("api:login");
+  publish("api:login");
 });
 
 export function setFetchUserTimer(userId: string, milliseconds: number) {

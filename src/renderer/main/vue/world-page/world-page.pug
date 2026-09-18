@@ -3,7 +3,7 @@
     template(v-if="world")
         div
             img(:src="world.apiWorld.thumbnailImageUrl"
-                :alt="world.apiWorld.displayName ?? world.id"
+                :alt="world.apiWorld.displayName || world.id"
                 style="width: 256px; height: 192px;")
         div name={{ world.apiWorld.name }}
         div description={{ world.apiWorld.description }}

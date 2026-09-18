@@ -1,17 +1,19 @@
-import * as vue from "vue";
-import * as util from "../../../../common/util";
-import * as router from "../../router";
-import * as api from "../../game/api";
+import { computed } from "vue";
+import { formatDate } from "../../../../common/util.ts";
+import { goUserPage } from "../../router.ts";
+import {
+  deletePlayerModeration,
+  type ApiPlayerModerationTypeValue,
+  type PlayerModeration,
+} from "../../game/api/index.ts";
 
-// const { ipcRenderer } = window;
+type Props = {
+  playerModeration: PlayerModeration;
+};
 
-interface Props {
-  playerModeration: api.PlayerModeration;
-}
-
-async function deletePlayerModeration(
+async function doDeletePlayerModeration(
   moderated: string,
-  type: api.ApiPlayerModerationType,
+  type: ApiPlayerModerationTypeValue,
 ) {
   try {
     const action = confirm("deletePlayerModeration");
@@ -19,7 +21,7 @@ async function deletePlayerModeration(
       return;
     }
 
-    await api.deletePlayerModeration(moderated, type);
+    await deletePlayerModeration(moderated, type);
   } catch (err) {
     console.error(err);
   }
@@ -32,13 +34,13 @@ export default {
   },
   components: {},
   setup(props: Props) {
-    const playerModerationRef = vue.computed(() => props.playerModeration);
+    const playerModerationRef = computed(() => props.playerModeration);
 
     return {
       playerModeration: playerModerationRef,
-      goUserPage: router.goUserPage,
-      formatDate: util.formatDate,
-      deletePlayerModeration,
+      goUserPage: goUserPage,
+      formatDate: formatDate,
+      deletePlayerModeration: doDeletePlayerModeration,
     };
   },
 };

@@ -1,9 +1,8 @@
-import * as pubsub from "../../../../../common/pubsub";
+import { subscribe } from "../../../../../common/pubsub.ts";
+import type { ApiPlatformValue, DateTimeString } from "../base.ts";
+import { api, ApiRequestMethod } from "../internal.ts";
 
-import type { ApiPlatform, DateTimeString } from "../base";
-import { api, ApiRequestMethod } from "../internal";
-
-export interface ApiUnityPackages {
+export type ApiUnityPackages = {
   id?: string;
   assetUrl?: string;
   assetUrlObject?: object;
@@ -12,44 +11,50 @@ export interface ApiUnityPackages {
   unityVersion?: string;
   unitySortNumber?: number;
   assetVersion?: number;
-  platform?: ApiPlatform;
+  platform?: ApiPlatformValue;
   created_at?: DateTimeString;
-}
+};
 
-export const enum ApiFileStatus {
-  None = "none",
-  Waiting = "waiting",
-  Queued = "queued",
-  Complete = "complete",
-  Error = "error",
-}
+export const ApiFileStatus = {
+  None: "none",
+  Waiting: "waiting",
+  Queued: "queued",
+  Complete: "complete",
+  Error: "error",
+};
 
-export const enum ApiFileCategory {
-  Simple = "simple",
-  Multipart = "multipart",
-  Queued = "queued",
-}
+export type ApiFileStatusValue =
+  (typeof ApiFileStatus)[keyof typeof ApiFileStatus];
 
-export interface ApiFileDescriptor {
+export const ApiFileCategory = {
+  Simple: "simple",
+  Multipart: "multipart",
+  Queued: "queued",
+};
+
+export type ApiFileCategoryValue =
+  (typeof ApiFileCategory)[keyof typeof ApiFileCategory];
+
+export type ApiFileDescriptor = {
   fileName?: string;
   url?: string;
   md5?: string;
   sizeInBytes?: number;
-  status?: ApiFileStatus;
-  category?: ApiFileCategory;
+  status?: ApiFileStatusValue;
+  category?: ApiFileCategoryValue;
   uploadId?: string;
-}
+};
 
-export interface ApiFileVersion {
+export type ApiFileVersion = {
   version?: number;
-  status?: ApiFileStatus;
+  status?: ApiFileStatusValue;
   created_at?: DateTimeString;
   file?: ApiFileDescriptor;
   delta?: ApiFileDescriptor;
   signature?: ApiFileDescriptor;
-}
+};
 
-export interface ApiFile {
+export type ApiFile = {
   id?: string;
   name?: string;
   ownerId?: string;
@@ -57,9 +62,9 @@ export interface ApiFile {
   extension?: string;
   tags?: string[];
   versions?: ApiFileVersion[];
-}
+};
 
-pubsub.subscribe("api:login", () => {
+subscribe("api:login", () => {
   //
 });
 

@@ -1,12 +1,12 @@
 let pendingCount = 0;
 
-export function increment() {
+export function incrementLoading() {
   if (++pendingCount === 1) {
     // FIXME
   }
 }
 
-export function decrement() {
+export function decrementLoading() {
   if (--pendingCount === 0) {
     // FIXME
   }

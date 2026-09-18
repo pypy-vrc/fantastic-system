@@ -1,10 +1,10 @@
-import { api, ApiRequestMethod } from "../internal";
+import { api, ApiRequestMethod } from "../internal.ts";
 
-export interface ApiHealth {
+export type ApiHealth = {
   ok?: boolean;
   serverName?: string;
   buildVersionTag?: string;
-}
+};
 
 export function fetchHealth() {
   return api<ApiHealth>({

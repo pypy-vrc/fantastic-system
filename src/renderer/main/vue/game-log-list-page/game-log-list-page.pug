@@ -9,13 +9,13 @@
         div(v-for="(roomUser, index) in roomUserList" :key="index" @click.prevent="clickUser(roomUser[0])")
             | {{ `${index + 1}. ${roomUser[0]} [${getDurationString(roomUser[1])}]` }}
     div(style="margin-top: 15px; padding-top: 14px; border-top: 1px solid #282828;")
-    el-pagination(
-        layout="sizes, prev, pager, next"
-        v-model:page-size="pageSize"
-        @update:page-size=""
-        :total="gameLogList.length"
-        v-model:current-page="currentPage"
-        @update:current-page="")
+    //- el-pagination(
+    //-     layout="sizes, prev, pager, next"
+    //-     v-model:page-size="pageSize"
+    //-     @update:page-size=""
+    //-     :total="gameLogList.length"
+    //-     v-model:current-page="currentPage"
+    //-     @update:current-page="")
     .game-log-list
         game-log-list-item(
             v-for="(gameLog, index) in gameLogList.slice((currentPage - 1) * pageSize, currentPage * pageSize)"

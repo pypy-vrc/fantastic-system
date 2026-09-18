@@ -1,8 +1,8 @@
-import * as idb from "idb";
-import * as vue from "vue";
-import { i18n } from "../i18n";
-import { router } from "./router";
-import * as App from "./vue/app/index.vue";
+import { openDB } from "idb";
+import { createApp } from "vue";
+import { i18n } from "../i18n.ts";
+import { router } from "./router.ts";
+import App from "./vue/app/index.vue";
 
 const { ipcRenderer } = window;
 
@@ -22,7 +22,7 @@ const { ipcRenderer } = window;
 // }
 
 (function main() {
-  const app = vue.createApp(App.default);
+  const app = createApp(App);
   app.use(i18n);
   app.use(router);
   app.mount("#app");
@@ -34,12 +34,12 @@ const { ipcRenderer } = window;
 })();
 
 (async () => {
-  const db = await idb.openDB("vrchat-logs", 1, {
-    upgrade(db, oldVersion, newVersion, transaction) {
+  const db = await openDB("vrchat-logs", 1, {
+    upgrade(_db, oldVersion, newVersion, transaction) {
       console.log("db.upgrade", { oldVersion, newVersion });
 
       if (oldVersion < 1) {
-        const store = db.createObjectStore("rows", {
+        const store = _db.createObjectStore("rows", {
           keyPath: ["f", "t", "n"],
         });
         store.createIndex("by-time", "t", {

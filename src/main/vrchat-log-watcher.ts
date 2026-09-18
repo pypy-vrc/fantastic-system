@@ -1,11 +1,18 @@
-import * as fs from "fs";
-import * as path from "path";
-import * as electron from "electron";
-import * as util from "../common/util";
-import { VRChatLogType } from "../common/constants";
-import * as mainWindow from "./window/main";
+import {
+  createReadStream,
+  unwatchFile,
+  watch,
+  watchFile,
+  type FSWatcher,
+} from "fs";
+import { access, constants, readdir } from "fs/promises";
+import { join } from "path";
+import { app, ipcMain } from "electron";
+import { nop, sleep } from "../common/util.ts";
+import { VRChatLogType } from "../common/constants.ts";
+import { sendToMainWindow } from "./window/main.ts";
 
-interface LogFile {
+type LogFile = {
   fileName: string;
   filePath: string;
   lockCount: number;
@@ -18,15 +25,15 @@ interface LogFile {
   roomName: string | null;
   isInRoom: boolean;
   rows: unknown[][];
-}
+};
 
 // Application.persistentDataPath
-const logDataPath = path.join(
-  electron.app.getPath("home"),
+const logDataPath = join(
+  app.getPath("home"),
   "./AppData/LocalLow/VRChat/VRChat/",
 );
 
-let logDataWatcher: fs.FSWatcher | undefined = void 0;
+let logDataWatcher: FSWatcher | undefined = void 0;
 const logFileMap = new Map<string, LogFile>();
 
 function onWatchLogData(_type: string, name: string | null) {
@@ -34,21 +41,21 @@ function onWatchLogData(_type: string, name: string | null) {
     return;
   }
 
-  watchLog(name).catch(util.nop);
+  watchLog(name).catch(nop);
 }
 
-export async function setup() {
+export async function setupLogWatcher() {
   for (;;) {
-    await util.sleep(1007);
+    await sleep(1007);
 
     try {
-      await fs.promises.access(logDataPath, fs.constants.F_OK);
+      await access(logDataPath, constants.F_OK);
 
       if (logDataWatcher !== void 0) {
         return;
       }
 
-      logDataWatcher = fs.watch(logDataPath, onWatchLogData);
+      logDataWatcher = watch(logDataPath, onWatchLogData);
       break;
     } catch {
       // ENOENT
@@ -56,7 +63,7 @@ export async function setup() {
   }
 
   try {
-    for (const entry of await fs.promises.readdir(logDataPath)) {
+    for (const entry of await readdir(logDataPath)) {
       onWatchLogData("change", entry);
     }
   } catch (err) {
@@ -65,7 +72,7 @@ export async function setup() {
 }
 
 async function watchLog(fileName: string) {
-  const filePath = path.join(logDataPath, fileName);
+  const filePath = join(logDataPath, fileName);
 
   let ctx = logFileMap.get(filePath);
   if (ctx === void 0) {
@@ -101,13 +108,13 @@ async function watchLog(fileName: string) {
   }
 
   ctx.lockCount = 0;
-  setImmediate(() => watchLog(fileName).catch(util.nop));
+  setImmediate(() => watchLog(fileName).catch(nop));
 }
 
 async function readLog(ctx: LogFile) {
   if (!ctx.isWatch) {
     // fs.watchFile() is necessary for fs.watch() to detect changes of this file.
-    fs.watchFile(
+    watchFile(
       ctx.filePath,
       {
         interval: 1007,
@@ -115,7 +122,7 @@ async function readLog(ctx: LogFile) {
       (stats) => {
         if (stats.birthtimeMs === 0) {
           ctx.isWatch = false;
-          fs.unwatchFile(ctx.filePath);
+          unwatchFile(ctx.filePath);
         }
       },
     );
@@ -125,7 +132,7 @@ async function readLog(ctx: LogFile) {
   const prevLength = ctx.rows.length;
 
   await new Promise<void>((resolve, reject) => {
-    const stream = fs.createReadStream(ctx.filePath, {
+    const stream = createReadStream(ctx.filePath, {
       encoding: "utf-8",
       start: ctx.byteOffset,
     });
@@ -159,7 +166,7 @@ async function readLog(ctx: LogFile) {
     return;
   }
 
-  mainWindow.send(
+  sendToMainWindow(
     "vrchatLog",
     ctx.fileName,
     prevLength !== 0 ? ctx.rows.slice(prevLength) : ctx.rows,
@@ -276,14 +283,14 @@ function parseLog(ctx: LogFile, text: string, line: number) {
   }
 }
 
-electron.ipcMain.on("vrchatLog:sync", (event) => {
+ipcMain.on("vrchatLog:sync", (event) => {
   event.returnValue = void 0;
 
-  mainWindow.send("vrchatLog:syncStart");
+  sendToMainWindow("vrchatLog:syncStart");
 
   for (const logFile of logFileMap.values()) {
-    mainWindow.send("vrchatLog", logFile.fileName, logFile.rows);
+    sendToMainWindow("vrchatLog", logFile.fileName, logFile.rows);
   }
 
-  mainWindow.send("vrchatLog:syncEnd");
+  sendToMainWindow("vrchatLog:syncEnd");
 });

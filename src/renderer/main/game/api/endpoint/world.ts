@@ -1,18 +1,22 @@
-import * as vue from "vue";
-import * as pubsub from "../../../../../common/pubsub";
-import type { ApiReleaseStatus, DateTimeString } from "../base";
+import { reactive } from "vue";
+import { subscribe } from "../../../../../common/pubsub.ts";
 import {
   ApiStatusCode,
   lazyFetchWorldIdSet,
   notFoundWorldIdSet,
-} from "../base";
-import { api, ApiRequestMethod, applyObject } from "../internal";
-import type { Favorite } from "./favorite";
-import { ApiFavoriteGroupType, favoriteMap } from "./favorite";
-import type { ApiUnityPackages } from "./file";
-import type { User } from "./user";
+  type ApiReleaseStatusValue,
+  type DateTimeString,
+} from "../base.ts";
+import { api, ApiRequestMethod, applyObject } from "../internal.ts";
+import {
+  ApiFavoriteGroupType,
+  favoriteMap,
+  type Favorite,
+} from "./favorite.ts";
+import type { ApiUnityPackages } from "./file.ts";
+import type { User } from "./user.ts";
 
-export interface ApiWorld {
+export type ApiWorld = {
   id?: string;
   name?: string;
   description?: string;
@@ -21,7 +25,7 @@ export interface ApiWorld {
   authorName?: string;
   capacity?: number;
   tags?: string[];
-  releaseStatus?: ApiReleaseStatus;
+  releaseStatus?: ApiReleaseStatusValue;
   imageUrl?: string;
   thumbnailImageUrl?: string;
   assetUrl?: string;
@@ -46,9 +50,9 @@ export interface ApiWorld {
   occupants?: number;
   instances?: [instanceId: string, occupants: number][];
   favoriteId?: string;
-}
+};
 
-export interface ApiWorldInstance {
+export type ApiWorldInstance = {
   id?: string;
   location?: string;
   instanceId?: string;
@@ -136,22 +140,22 @@ export interface ApiWorldInstance {
   // permanent: boolean;
   // friends: string;
   // strict: boolean;
-}
+};
 
-export interface World {
+export type World = {
   id: string;
   apiWorld: ApiWorld;
   instances: Map<string, Instance>;
-}
+};
 
-export interface Instance {
+export type Instance = {
   id: string;
   users: Set<User>;
-}
+};
 
-export const worldMap = vue.reactive(new Map<string, World>());
+export const worldMap = reactive(new Map<string, World>());
 
-pubsub.subscribe("api:login", () => {
+subscribe("api:login", () => {
   worldMap.clear();
 });
 
@@ -163,7 +167,7 @@ export function applyWorld(apiWorld: ApiWorld) {
 
   let world = worldMap.get(id);
   if (world === void 0) {
-    world = vue.reactive<World>({
+    world = reactive<World>({
       id,
       apiWorld: {},
       instances: new Map(),

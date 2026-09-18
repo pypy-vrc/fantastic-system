@@ -1,27 +1,27 @@
-import * as path from "path";
-import * as electron from "electron";
-import * as util from "../../common/util";
-import * as global from "../global";
+import { join } from "path";
+import { app, BrowserWindow, ipcMain, screen, shell } from "electron";
+import { nop } from "../../common/util.ts";
+import { APP_ICON, IS_APP_QUIT, USER_AGENT } from "../global.ts";
 
-let window: electron.BrowserWindow | undefined = void 0;
+let window: BrowserWindow | undefined = void 0;
 
-export function create() {
+export function createMainWindow() {
   if (window !== void 0) {
     return;
   }
 
-  window = new electron.BrowserWindow({
+  window = new BrowserWindow({
     width: 800,
     height: 500,
     minWidth: 300,
     minHeight: 200,
     fullscreenable: false,
-    icon: global.appIcon,
+    icon: APP_ICON,
     show: false,
     frame: false,
     webPreferences: {
       nodeIntegration: false,
-      preload: path.join(electron.app.getAppPath(), "./dist/preload.js"),
+      preload: join(app.getAppPath(), "./dist/preload.cjs"),
       sandbox: false,
       defaultEncoding: "utf-8",
       backgroundThrottling: false,
@@ -34,7 +34,7 @@ export function create() {
   });
 
   window.on("close", (e) => {
-    if (!global.isAppQuit.value) {
+    if (!IS_APP_QUIT.value) {
       e.preventDefault();
       window?.hide();
       return;
@@ -60,7 +60,7 @@ export function create() {
 
     const { x: winX, y: winY } = window.getBounds();
 
-    for (const { bounds } of electron.screen.getAllDisplays()) {
+    for (const { bounds } of screen.getAllDisplays()) {
       const { height, width, x, y } = bounds;
       if (winX >= x && winX <= x + width && winY >= y && winY <= y + height) {
         // okay, windows in a display
@@ -87,7 +87,7 @@ export function create() {
   });
 
   window.webContents.setWindowOpenHandler((details) => {
-    electron.shell.openExternal(details.url).catch(util.nop);
+    shell.openExternal(details.url).catch(nop);
 
     return {
       action: "deny",
@@ -133,7 +133,7 @@ export function create() {
       // }
 
       const headers: Record<string, string | string[]> = {
-        "User-Agent": global.userAgent,
+        "User-Agent": USER_AGENT,
       };
 
       const names = url.startsWith("wss://")
@@ -168,7 +168,7 @@ export function create() {
       urls: ["https://*.vrchat.cloud/*"],
     },
     (details, callback) => {
-      const responseHeaders = details.responseHeaders ?? {};
+      const responseHeaders = details.responseHeaders || {};
 
       const cookies = responseHeaders["set-cookie"] as string[] | undefined;
       if (cookies !== void 0) {
@@ -209,11 +209,11 @@ export function create() {
     },
   );
 
-  window.loadFile("./dist/main.html").catch(util.nop);
+  window.loadFile("./dist/main.html").catch(nop);
   //.finally(() => window?.show());
 }
 
-export function destroy() {
+export function destroyMainWindow() {
   try {
     window?.destroy();
     window = void 0;
@@ -222,11 +222,11 @@ export function destroy() {
   }
 }
 
-export function send(channel: string, ...args: unknown[]) {
+export function sendToMainWindow(channel: string, ...args: unknown[]) {
   window?.webContents.send(channel, ...args);
 }
 
-export function activate() {
+export function activateMainWindow() {
   if (window === void 0) {
     return;
   }
@@ -238,17 +238,17 @@ export function activate() {
   window.show();
 }
 
-electron.ipcMain.on("main:close", (event) => {
+ipcMain.on("main:close", (event) => {
   event.returnValue = void 0;
   window?.close();
 });
 
-electron.ipcMain.on("main:minimize", (event) => {
+ipcMain.on("main:minimize", (event) => {
   event.returnValue = void 0;
   window?.minimize();
 });
 
-electron.ipcMain.on("main:maximize", (event) => {
+ipcMain.on("main:maximize", (event) => {
   event.returnValue = void 0;
 
   if (window === void 0) {
