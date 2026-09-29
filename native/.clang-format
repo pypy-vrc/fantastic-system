@@ -1,0 +1,10 @@
+BasedOnStyle: LLVM
+
+ColumnLimit: 120
+ContinuationIndentWidth: 2
+AlignAfterOpenBracket: false
+AllowShortFunctionsOnASingleLine: None
+SortIncludes: Never
+
+LineEnding: LF
+InsertNewlineAtEOF: true

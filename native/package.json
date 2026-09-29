@@ -1,0 +1,21 @@
+{
+  "name": "native",
+  "version": "0.0.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "install": "npm run build",
+    "build": "node-gyp rebuild && tsc -p tsconfig.json"
+  },
+  "gypfile": false,
+  "devDependencies": {
+    "@types/node": "^24.19.0",
+    "node-addon-api": "^8.9.2",
+    "node-gyp": "^13.0.2",
+    "typescript": "^7.0.2"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "private": true
+}

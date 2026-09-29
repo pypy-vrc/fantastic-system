@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "module": "nodenext",
+    "types": ["node"],
+    "outDir": "dist",
+    "declaration": true,
+    "strict": true,
+    "allowJs": true,
+    "checkJs": true,
+    "skipLibCheck": true
+  },
+  "include": ["index.ts"]
+}

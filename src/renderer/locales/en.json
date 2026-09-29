@@ -1,0 +1,9 @@
+{
+  "locale": {
+    "en": "English",
+    "ko": "Korean"
+  },
+  "app": {
+    "time": "current time is {0}"
+  }
+}

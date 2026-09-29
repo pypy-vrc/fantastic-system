@@ -1,0 +1,20 @@
+.game-log-list-item
+    .game-log-list-item__time(:title="formatDate(gameLog[0] * 1000, 'YYYY-MM-DD HH24:MI:SS')")
+        | {{ formatDate(gameLog[0] * 1000, 'MM-DD HH24:MI') }}
+    template(v-if="gameLog[1] === 3")
+        .game-log-list-item__type
+            .fas.fa-map-pin
+        .game-log-list-item__detail
+            location(:location="gameLog[2]" :world-name="gameLog[3]" :clickable="true")
+            div(@click.prevent="sendInviteMe(gameLog[2], gameLog[3])") sendInviteMe
+            div(@click.prevent="playGame(gameLog[2], gameLog[3])") playGame
+    template(v-else-if="gameLog[1] === 5")
+        .game-log-list-item__type
+            .fas.fa-angle-right
+        .game-log-list-item__detail(@click.prevent="clickUser(gameLog[2])") {{ gameLog[2] }}
+    template(v-else-if="gameLog[1] === 6")
+        .game-log-list-item__type
+            .fas.fa-angle-left
+        .game-log-list-item__detail(@click.prevent="clickUser(gameLog[2])") {{ gameLog[2] }} [{{ getDurationString(gameLog[3]) }}]
+    template(v-else)
+        .game-log-list-item__detail {{ gameLog.join(', ') }}
